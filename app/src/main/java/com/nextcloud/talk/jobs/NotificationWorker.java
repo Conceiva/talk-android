@@ -341,8 +341,9 @@ public class NotificationWorker extends Worker {
                     Long.toString(crc32.getValue()),
                     groupName);*/
 
-//            Maulik
-           /* if (decryptedPushMessage.getType().equals("chat") || decryptedPushMessage.getType().equals("room")) {
+            //Maulik
+            /*
+            if (decryptedPushMessage.getType().equals("chat") || decryptedPushMessage.getType().equals("room")) {
                 NotificationUtils.INSTANCE.createNotificationChannel(context,
                         NotificationUtils.INSTANCE.getNOTIFICATION_CHANNEL_MESSAGES_V3(), context.getResources()
                                 .getString(R.string.nc_notification_channel_messages), context.getResources()
