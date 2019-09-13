@@ -17,23 +17,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.nextcloud.talk.models.json.mention;
 
-import com.bluelinelabs.logansquare.annotation.JsonField;
-import com.bluelinelabs.logansquare.annotation.JsonObject;
-import com.nextcloud.talk.models.json.generic.GenericOCS;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+package com.nextcloud.talk.events;
 
-import org.parceler.Parcel;
+import com.nextcloud.talk.models.json.meetings.MeetingsReponse;
 
 import java.util.List;
 
+import lombok.Data;
+
 @Data
-@Parcel
-@JsonObject
-@EqualsAndHashCode(callSuper=false)
-public class MentionOCS extends GenericOCS {
-    @JsonField(name = "data")
-    List<Mention> data;
+public class MeetingApiRefreshEvent {
+    boolean refreshAPI=false;
+
+    public MeetingApiRefreshEvent(boolean refreshAPI) {
+        this.refreshAPI=refreshAPI;
+    }
+
+
+
 }

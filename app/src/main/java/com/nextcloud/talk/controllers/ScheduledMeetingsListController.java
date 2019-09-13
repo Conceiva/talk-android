@@ -22,7 +22,6 @@ package com.nextcloud.talk.controllers;
 
 import android.app.SearchManager;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
@@ -38,7 +37,6 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.Toolbar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -56,7 +54,6 @@ import com.bluelinelabs.conductor.RouterTransaction;
 import com.bluelinelabs.conductor.changehandler.HorizontalChangeHandler;
 import com.bluelinelabs.conductor.changehandler.TransitionChangeHandlerCompat;
 import com.bluelinelabs.conductor.changehandler.VerticalChangeHandler;
-import com.bluelinelabs.conductor.internal.NoOpControllerChangeHandler;
 import com.facebook.common.executors.UiThreadImmediateExecutorService;
 import com.facebook.common.references.CloseableReference;
 import com.facebook.datasource.DataSource;
@@ -69,7 +66,6 @@ import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.kennyc.bottomsheet.BottomSheet;
 import com.nextcloud.talk.R;
-import com.nextcloud.talk.activities.MagicCallActivity;
 import com.nextcloud.talk.adapters.items.CallItem;
 import com.nextcloud.talk.adapters.items.ConversationItem;
 import com.nextcloud.talk.adapters.items.MeetingItems;
@@ -80,15 +76,15 @@ import com.nextcloud.talk.controllers.bottomsheet.CallMenuController;
 import com.nextcloud.talk.controllers.bottomsheet.EntryMenuController;
 import com.nextcloud.talk.events.BottomSheetLockEvent;
 import com.nextcloud.talk.events.EventStatus;
+import com.nextcloud.talk.events.MeetingApiCallEvent;
+import com.nextcloud.talk.events.MeetingApiRefreshEvent;
 import com.nextcloud.talk.events.MoreMenuClickEvent;
 import com.nextcloud.talk.interfaces.ConversationMenuInterface;
 import com.nextcloud.talk.jobs.DeleteConversationWorker;
 import com.nextcloud.talk.models.database.UserEntity;
 import com.nextcloud.talk.models.json.conversations.Conversation;
 import com.nextcloud.talk.models.json.meetings.MeetingsReponse;
-import com.nextcloud.talk.models.json.participants.Participant;
 import com.nextcloud.talk.utils.ApiUtils;
-import com.nextcloud.talk.utils.ConductorRemapping;
 import com.nextcloud.talk.utils.DisplayUtils;
 import com.nextcloud.talk.utils.KeyboardUtils;
 import com.nextcloud.talk.utils.animations.SharedElementTransition;
@@ -121,12 +117,14 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import retrofit2.HttpException;
 
+import static com.nextcloud.talk.events.EventStatus.EventType.CONVERSATION_UPDATE;
+
 @AutoInjector(NextcloudTalkApplication.class)
-public class MeetingsListController extends BaseController implements SearchView.OnQueryTextListener,
+public class ScheduledMeetingsListController extends BaseController implements SearchView.OnQueryTextListener,
         FlexibleAdapter.OnItemClickListener, FlexibleAdapter.OnItemLongClickListener, FastScroller
                 .OnScrollStateChangeListener, ConversationMenuInterface {
 
-    public static final String TAG = "ConversationsListController";
+    public static final String TAG = "ScheduledMeetingsListController";
     public static final int ID_DELETE_CONVERSATION_DIALOG = 0;
     private static final String KEY_SEARCH_QUERY = "ContactsController.searchQuery";
     @Inject
@@ -186,9 +184,9 @@ public class MeetingsListController extends BaseController implements SearchView
 
     private Bundle conversationMenuBundle = null;
 
-    public MeetingsListController() {
+    public ScheduledMeetingsListController() {
         super();
-        setHasOptionsMenu(true);
+//        setHasOptionsMenu(true);
     }
 
     @Override
@@ -219,6 +217,7 @@ public class MeetingsListController extends BaseController implements SearchView
 
         adapter.addListener(this);
         prepareViews();
+
     }
 
     private void loadUserAvatar(MenuItem menuItem) {
@@ -258,9 +257,9 @@ public class MeetingsListController extends BaseController implements SearchView
         if (currentUser != null) {
             credentials = ApiUtils.getCredentials(currentUser.getUsername(), currentUser.getToken());
             shouldUseLastMessageLayout = currentUser.hasSpreedFeatureCapability("last-room-activity");
-            fetchData(false);
-        }
 
+        }
+        progressBarView.setVisibility(View.GONE);
     }
 
     @Override
@@ -290,7 +289,7 @@ public class MeetingsListController extends BaseController implements SearchView
         }
     }
 
-    @Override
+  /*  @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_settings:
@@ -304,8 +303,8 @@ public class MeetingsListController extends BaseController implements SearchView
                 return super.onOptionsItemSelected(item);
         }
     }
-
-    @Override
+*/
+   /* @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.menu_conversation_plus_filter, menu);
@@ -325,224 +324,62 @@ public class MeetingsListController extends BaseController implements SearchView
         MenuItem menuItem = menu.findItem(R.id.action_settings);
         loadUserAvatar(menuItem);
     }
+*/
 
-    private void fetchRoomData(boolean fromBottomSheet) {
-        dispose(null);
+    @Subscribe()
+    public void onMeetingListAPIRespone(MeetingApiCallEvent event) {
+        /* Do something */
+        List<MeetingsReponse> meetingsReponses=event.getResponse();
 
-        isRefreshing = true;
+            if (adapterWasNull) {
+                adapterWasNull = false;
 
-        callItems = new ArrayList<>();
+            }
+            progressBarView.setVisibility(View.GONE);
+            if (meetingsReponses.size() > 0) {
+                if (emptyLayoutView.getVisibility() != View.GONE) {
+                    emptyLayoutView.setVisibility(View.GONE);
+                }
 
-        roomsQueryDisposable = ncApi.getRooms(credentials, ApiUtils.getUrlForGetMeetings(currentUser.getBaseUrl()))
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(roomsOverall -> {
-                    if (adapterWasNull) {
-                        adapterWasNull = false;
-                        progressBarView.setVisibility(View.GONE);
-                    }
+                if (swipeRefreshLayout.getVisibility() != View.VISIBLE) {
+                    swipeRefreshLayout.setVisibility(View.VISIBLE);
+                }
+            } else {
+                if (emptyLayoutView.getVisibility() != View.VISIBLE) {
+                    emptyLayoutView.setVisibility(View.VISIBLE);
+                }
 
-                    if (roomsOverall.getOcs().getData().size() > 0) {
-                        if (emptyLayoutView.getVisibility() != View.GONE) {
-                            emptyLayoutView.setVisibility(View.GONE);
-                        }
+                if (swipeRefreshLayout.getVisibility() != View.GONE) {
+                    swipeRefreshLayout.setVisibility(View.GONE);
+                }
+            }
 
-                        if (swipeRefreshLayout.getVisibility() != View.VISIBLE) {
-                            swipeRefreshLayout.setVisibility(View.VISIBLE);
-                        }
-                    } else {
-                        if (emptyLayoutView.getVisibility() != View.VISIBLE) {
-                            emptyLayoutView.setVisibility(View.VISIBLE);
-                        }
+            MeetingsReponse meeting;
+            callItems.clear();
+            for (int i = 0; i < meetingsReponses.size(); i++) {
+                meeting = meetingsReponses.get(i);
 
-                        if (swipeRefreshLayout.getVisibility() != View.GONE) {
-                            swipeRefreshLayout.setVisibility(View.GONE);
-                        }
-                    }
+                MeetingItems conversationItem = new MeetingItems(meeting, currentUser);
+                callItems.add(conversationItem);
 
-                    Conversation conversation;
-                    for (int i = 0; i < roomsOverall.getOcs().getData().size(); i++) {
-                        conversation = roomsOverall.getOcs().getData().get(i);
-                        if (shouldUseLastMessageLayout) {
-                            ConversationItem conversationItem = new ConversationItem(conversation, currentUser);
-                            callItems.add(conversationItem);
-                        } else {
-                            CallItem callItem = new CallItem(conversation, currentUser);
-                            callItems.add(callItem);
-                        }
-                    }
+            }
 
-                    if (currentUser.hasSpreedFeatureCapability("last-room-activity")) {
-                        Collections.sort(callItems, (o1, o2) -> {
-                            Conversation conversation1 = ((ConversationItem) o1).getModel();
-                            Conversation conversation2 = ((ConversationItem) o2).getModel();
-                            return new CompareToBuilder()
-                                    .append(conversation2.isFavorite(), conversation1.isFavorite())
-                                    .append(conversation2.getLastActivity(), conversation1.getLastActivity())
-                                    .toComparison();
-                        });
-                    } else {
-                        Collections.sort(callItems, (callItem, t1) ->
-                                Long.compare(((CallItem) t1).getModel().getLastPing(),
-                                        ((CallItem) callItem).getModel().getLastPing()));
-                    }
+            adapter.updateDataSet(callItems, false);
 
-                    adapter.updateDataSet(callItems, false);
+            if (searchItem != null) {
+                searchItem.setVisible(callItems.size() > 0);
+            }
 
-                    if (searchItem != null) {
-                        searchItem.setVisible(callItems.size() > 0);
-                    }
-
-                    if (swipeRefreshLayout != null) {
-                        swipeRefreshLayout.setRefreshing(false);
-                    }
-
-                }, throwable -> {
-                    if (searchItem != null) {
-                        searchItem.setVisible(false);
-                    }
-
-                    if (throwable instanceof HttpException) {
-                        HttpException exception = (HttpException) throwable;
-                        switch (exception.code()) {
-                            case 401:
-                                if (getParentController() != null &&
-                                        getParentController().getRouter() != null) {
-                                    getParentController().getRouter().pushController((RouterTransaction.with
-                                            (new WebViewLoginController(currentUser.getBaseUrl(),
-                                                    true))
-                                            .pushChangeHandler(new VerticalChangeHandler())
-                                            .popChangeHandler(new VerticalChangeHandler())));
-                                }
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                    if (swipeRefreshLayout != null) {
-                        swipeRefreshLayout.setRefreshing(false);
-                    }
-                    dispose(roomsQueryDisposable);
-                }, () -> {
-                    dispose(roomsQueryDisposable);
-                    if (swipeRefreshLayout != null) {
-                        swipeRefreshLayout.setRefreshing(false);
-                    }
-
-                    if (fromBottomSheet) {
-                        new Handler().postDelayed(() -> {
-                            bottomSheet.setCancelable(true);
-                            if (bottomSheet.isShowing()) {
-                                bottomSheet.cancel();
-                            }
-                        }, 2500);
-                    }
-
-                    isRefreshing = false;
-                });
-
-    }
-
-    private void fetchData(boolean fromBottomSheet) {
-        dispose(null);
-
-        isRefreshing = true;
-
-        callItems = new ArrayList<>();
-
-        roomsQueryDisposable = ncApi.getAllMeetings(credentials, ApiUtils.getUrlForGetMeetings(currentUser.getBaseUrl()))
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(meetingsReponses -> {
-
-                    if (adapterWasNull) {
-                        adapterWasNull = false;
-                        progressBarView.setVisibility(View.GONE);
-                    }
-
-                    if (meetingsReponses.size() > 0) {
-                        if (emptyLayoutView.getVisibility() != View.GONE) {
-                            emptyLayoutView.setVisibility(View.GONE);
-                        }
-
-                        if (swipeRefreshLayout.getVisibility() != View.VISIBLE) {
-                            swipeRefreshLayout.setVisibility(View.VISIBLE);
-                        }
-                    } else {
-                        if (emptyLayoutView.getVisibility() != View.VISIBLE) {
-                            emptyLayoutView.setVisibility(View.VISIBLE);
-                        }
-
-                        if (swipeRefreshLayout.getVisibility() != View.GONE) {
-                            swipeRefreshLayout.setVisibility(View.GONE);
-                        }
-                    }
-
-                    MeetingsReponse meeting;
-                    for (int i = 0; i < meetingsReponses.size(); i++) {
-                        meeting = meetingsReponses.get(i);
-
-                            MeetingItems conversationItem = new MeetingItems(meeting, currentUser);
-                            callItems.add(conversationItem);
-
-                    }
+            if (swipeRefreshLayout != null) {
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        dispose(roomsQueryDisposable);
+        if (swipeRefreshLayout != null) {
+            swipeRefreshLayout.setRefreshing(false);
+        }
 
 
-
-                    adapter.updateDataSet(callItems, false);
-
-                    if (searchItem != null) {
-                        searchItem.setVisible(callItems.size() > 0);
-                    }
-
-                    if (swipeRefreshLayout != null) {
-                        swipeRefreshLayout.setRefreshing(false);
-                    }
-
-                }, throwable -> {
-                    if (searchItem != null) {
-                        searchItem.setVisible(false);
-                    }
-
-                    if (throwable instanceof HttpException) {
-                        HttpException exception = (HttpException) throwable;
-                        switch (exception.code()) {
-                            case 401:
-                                if (getParentController() != null &&
-                                        getParentController().getRouter() != null) {
-                                    getParentController().getRouter().pushController((RouterTransaction.with
-                                            (new WebViewLoginController(currentUser.getBaseUrl(),
-                                                    true))
-                                            .pushChangeHandler(new VerticalChangeHandler())
-                                            .popChangeHandler(new VerticalChangeHandler())));
-                                }
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                    if (swipeRefreshLayout != null) {
-                        swipeRefreshLayout.setRefreshing(false);
-                    }
-                    dispose(roomsQueryDisposable);
-                }, () -> {
-                    dispose(roomsQueryDisposable);
-                    if (swipeRefreshLayout != null) {
-                        swipeRefreshLayout.setRefreshing(false);
-                    }
-
-                    if (fromBottomSheet) {
-                        new Handler().postDelayed(() -> {
-                            bottomSheet.setCancelable(true);
-                            if (bottomSheet.isShowing()) {
-                                bottomSheet.cancel();
-                            }
-                        }, 2500);
-                    }
-
-                    isRefreshing = false;
-                });
-
+        isRefreshing = false;
     }
 
     private void prepareViews() {
@@ -553,24 +390,21 @@ public class MeetingsListController extends BaseController implements SearchView
 
         recyclerView.setAdapter(adapter);
 
-        swipeRefreshLayout.setOnRefreshListener(() -> fetchData(false));
+        swipeRefreshLayout.setOnRefreshListener(() -> eventBus.post(new MeetingApiRefreshEvent(true)));
         swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
 
-        emptyLayoutView.setOnClickListener(v -> showNewConversationsScreen());
-        floatingActionButton.setOnClickListener(v -> {
+//        emptyLayoutView.setOnClickListener(v -> );
+        /*floatingActionButton.setOnClickListener(v -> {
             showNewConversationsScreen();
-        });
+        });*/
 
         fastScroller.addOnScrollStateChangeListener(this);
         adapter.setFastScroller(fastScroller);
 
         fastScroller.setBubbleTextCreator(position -> {
             String displayName;
-            if (shouldUseLastMessageLayout) {
-                displayName = ((ConversationItem) adapter.getItem(position)).getModel().getDisplayName();
-            } else {
-                displayName = ((CallItem) adapter.getItem(position)).getModel().getDisplayName();
-            }
+
+                displayName = ((MeetingItems) adapter.getItem(position)).getModel().getTitle();
 
             if (displayName.length() > 8) {
                 displayName = displayName.substring(0, 4) + "...";
@@ -579,13 +413,7 @@ public class MeetingsListController extends BaseController implements SearchView
         });
     }
 
-    private void showNewConversationsScreen() {
-        Bundle bundle = new Bundle();
-        bundle.putBoolean(BundleKeys.INSTANCE.getKEY_NEW_CONVERSATION(), true);
-        getRouter().pushController((RouterTransaction.with(new ContactsController(bundle))
-                .pushChangeHandler(new HorizontalChangeHandler())
-                .popChangeHandler(new HorizontalChangeHandler())));
-    }
+
 
     private void dispose(@Nullable Disposable disposable) {
         if (disposable != null && !disposable.isDisposed()) {
@@ -617,7 +445,7 @@ public class MeetingsListController extends BaseController implements SearchView
         if (LovelySaveStateHandler.wasDialogOnScreen(savedViewState)) {
             //Dialog won't be restarted automatically, so we need to call this method.
             //Each dialog knows how to restore its state
-            showLovelyDialog(LovelySaveStateHandler.getSavedDialogId(savedViewState), savedViewState);
+//            showLovelyDialog(LovelySaveStateHandler.getSavedDialogId(savedViewState), savedViewState);
         }
     }
 
@@ -656,59 +484,6 @@ public class MeetingsListController extends BaseController implements SearchView
         return onQueryTextChange(query);
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onMessageEvent(BottomSheetLockEvent bottomSheetLockEvent) {
-        if (bottomSheet != null) {
-            if (!bottomSheetLockEvent.isCancelable()) {
-                bottomSheet.setCancelable(bottomSheetLockEvent.isCancelable());
-            } else {
-                if (bottomSheetLockEvent.getDelay() != 0 && bottomSheetLockEvent.isShouldRefreshData()) {
-                    fetchData(true);
-                } else {
-                    bottomSheet.setCancelable(bottomSheetLockEvent.isCancelable());
-                    if (bottomSheet.isShowing() && bottomSheetLockEvent.isCancel()) {
-                        bottomSheet.cancel();
-                    }
-                }
-            }
-        }
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onMessageEvent(MoreMenuClickEvent moreMenuClickEvent) {
-        Bundle bundle = new Bundle();
-        Conversation conversation = moreMenuClickEvent.getConversation();
-        bundle.putParcelable(BundleKeys.INSTANCE.getKEY_ROOM(), Parcels.wrap(conversation));
-        bundle.putParcelable(BundleKeys.INSTANCE.getKEY_MENU_TYPE(), Parcels.wrap(CallMenuController.MenuType.REGULAR));
-
-        prepareAndShowBottomSheetWithBundle(bundle, true);
-    }
-
-    private void prepareAndShowBottomSheetWithBundle(Bundle bundle, boolean shouldShowCallMenuController) {
-        if (view == null) {
-            view = getActivity().getLayoutInflater().inflate(R.layout.bottom_sheet, null, false);
-        }
-
-        if (shouldShowCallMenuController) {
-            getChildRouter((ViewGroup) view).setRoot(
-                    RouterTransaction.with(new CallMenuController(bundle, this))
-                            .popChangeHandler(new VerticalChangeHandler())
-                            .pushChangeHandler(new VerticalChangeHandler()));
-        } else {
-            getChildRouter((ViewGroup) view).setRoot(
-                    RouterTransaction.with(new EntryMenuController(bundle))
-                            .popChangeHandler(new VerticalChangeHandler())
-                            .pushChangeHandler(new VerticalChangeHandler()));
-        }
-
-        if (bottomSheet == null) {
-            bottomSheet = new BottomSheet.Builder(getActivity()).setView(view).create();
-        }
-
-        bottomSheet.setOnShowListener(dialog -> new KeyboardUtils(getActivity(), bottomSheet.getLayout(), true));
-        bottomSheet.setOnDismissListener(dialog -> getActionBar().setDisplayHomeAsUpEnabled(getRouter().getBackstackSize() > 1));
-        bottomSheet.show();
-    }
 
 
     @Override
@@ -764,85 +539,14 @@ public class MeetingsListController extends BaseController implements SearchView
 
     @Override
     public void onItemLongClick(int position) {
-        if (currentUser.hasSpreedFeatureCapability("last-room-activity")) {
-            Object clickedItem = adapter.getItem(position);
-            if (clickedItem != null) {
-                Conversation conversation;
-                if (shouldUseLastMessageLayout) {
-                    conversation = ((ConversationItem) clickedItem).getModel();
-                } else {
-                    conversation = ((CallItem) clickedItem).getModel();
-                }
 
-                MoreMenuClickEvent moreMenuClickEvent = new MoreMenuClickEvent(conversation);
-                onMessageEvent(moreMenuClickEvent);
-            }
-        }
     }
 
-    @Subscribe(sticky = true, threadMode = ThreadMode.BACKGROUND)
-    public void onMessageEvent(EventStatus eventStatus) {
-        if (currentUser != null && eventStatus.getUserId() == currentUser.getId()) {
-            switch (eventStatus.getEventType()) {
-                case CONVERSATION_UPDATE:
-                    if (eventStatus.isAllGood() && !isRefreshing) {
-                        fetchData(false);
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
 
-    private void showDeleteConversationDialog(Bundle savedInstanceState) {
-        if (getActivity() != null && conversationMenuBundle != null && currentUser != null && conversationMenuBundle.getLong(BundleKeys.INSTANCE.getKEY_INTERNAL_USER_ID()) == currentUser.getId()) {
-
-            Conversation conversation =
-                    Parcels.unwrap(conversationMenuBundle.getParcelable(BundleKeys.INSTANCE.getKEY_ROOM()));
-
-            if (conversation != null) {
-                new LovelyStandardDialog(getActivity(), LovelyStandardDialog.ButtonLayout.HORIZONTAL)
-                        .setTopColorRes(R.color.nc_darkRed)
-                        .setIcon(DisplayUtils.getTintedDrawable(context.getResources(),
-                                R.drawable.ic_delete_black_24dp, R.color.bg_default))
-                        .setPositiveButtonColor(context.getResources().getColor(R.color.nc_darkRed))
-                        .setTitle(R.string.nc_delete_call)
-                        .setMessage(conversation.getDeleteWarningMessage())
-                        .setPositiveButton(R.string.nc_delete, new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Data.Builder data = new Data.Builder();
-                                data.putLong(BundleKeys.INSTANCE.getKEY_INTERNAL_USER_ID(),
-                                        conversationMenuBundle.getLong(BundleKeys.INSTANCE.getKEY_INTERNAL_USER_ID()));
-                                data.putString(BundleKeys.INSTANCE.getKEY_ROOM_TOKEN(), conversation.getToken());
-                                conversationMenuBundle = null;
-                                deleteConversation(data.build());
-                            }
-                        })
-                        .setNegativeButton(R.string.nc_cancel, new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                conversationMenuBundle = null;
-                            }
-                        })
-                        .setInstanceStateHandler(ID_DELETE_CONVERSATION_DIALOG, saveStateHandler)
-                        .setSavedInstanceState(savedInstanceState)
-                        .show();
-            }
-        }
-    }
-
-    private void deleteConversation(Data data) {
-        OneTimeWorkRequest deleteConversationWorker =
-                new OneTimeWorkRequest.Builder(DeleteConversationWorker.class).setInputData(data).build();
-        WorkManager.getInstance().enqueue(deleteConversationWorker);
-    }
 
     private void showLovelyDialog(int dialogId, Bundle savedInstanceState) {
         switch (dialogId) {
             case ID_DELETE_CONVERSATION_DIALOG:
-                showDeleteConversationDialog(savedInstanceState);
                 break;
             default:
                 break;

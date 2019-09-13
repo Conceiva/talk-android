@@ -27,6 +27,7 @@ import android.graphics.drawable.LayerDrawable;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -41,6 +42,8 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import com.nextcloud.talk.R;
 import com.nextcloud.talk.application.NextcloudTalkApplication;
 
+import com.nextcloud.talk.events.MeetingApiCallEvent;
+import com.nextcloud.talk.events.MeetingItemClickEvent;
 import com.nextcloud.talk.models.database.UserEntity;
 import com.nextcloud.talk.models.json.chat.ChatMessage;
 import com.nextcloud.talk.models.json.conversations.Conversation;
@@ -55,7 +58,10 @@ import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.PropertyList;
+import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VTimeZone;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -170,18 +176,21 @@ public class MeetingItems extends AbstractFlexibleItem<MeetingItems.Conversation
         try {
             cal = builder.build(sin);
 
-            VTimeZone component= (VTimeZone) cal.getComponents().getComponent("VTIMEZONE");
-            Property rrule=component.getObservances().getComponent("STANDARD").getProperties().getProperty("RRULE");
-            String rule=rrule.getValue().toString();
-            if(getTextForFrequency(rule).equalsIgnoreCase(""))
-            {
-                holder.meetingFrequencyTextView.setVisibility(View.GONE);
+            VEvent component = (VEvent) cal.getComponents().getComponent("VEVENT");
+            Property rrule = component.getProperties().getProperty("RRULE");
+            if(rrule!=null) {
+                String rule = rrule.getValue().toString();
+                String startingOn = " Starting on "+DateUtils.INSTANCE.getDateTimeStringFromTimestamp(meeting.getStart(), "dd MMMM yyyy HH:mm", meeting.getTimezone());
+                if (getTextForFrequency(rule).equalsIgnoreCase("")) {
+                    holder.meetingFrequencyTextView.setVisibility(View.GONE);
+                } else {
+                    holder.meetingFrequencyTextView.setVisibility(View.VISIBLE);
+                    holder.meetingFrequencyTextView.setText(getTextForFrequency(rule) + " " + startingOn);
+                }
             }
             else {
-                holder.meetingFrequencyTextView.setVisibility(View.VISIBLE);
-                holder.meetingFrequencyTextView.setText(getTextForFrequency(rule));
+                holder.meetingFrequencyTextView.setVisibility(View.GONE);
             }
-
             //FREQ=YEARLY;BYMONTH=4;BYDAY=1SU
         } catch (IOException e) {
             Log.d("calendar", "io exception" + e.getLocalizedMessage());
@@ -189,67 +198,57 @@ public class MeetingItems extends AbstractFlexibleItem<MeetingItems.Conversation
             Log.d("calendar", "parser exception" + e.getLocalizedMessage());
         }
 
+        holder.viewDetailsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                EventBus.getDefault().post(new MeetingItemClickEvent(meeting));
+            }
+        });
+
     }
 
     private String getTextForFrequency(String rule)
     {
-        String[] splitted=rule.split(";");
-        String frequency = "",interval="0";
+        String[] splitted = rule.split(";");
+        String frequency = "", interval = "";
 
-        String finalText="";
-        for (int i=0;i<splitted.length;i++)
-        {
-            if(splitted[i].contains("FREQ"))
-            {
-                frequency=(splitted[i].split("="))[1];
+        String finalText = "";
+        for (int i = 0; i < splitted.length; i++) {
+            if (splitted[i].contains("FREQ")) {
+                frequency = (splitted[i].split("="))[1];
             }
 
-            if(splitted[i].contains("INTERVAL"))
-            {
-                interval=((splitted[i].split("="))[1]);
+            if (splitted[i].contains("INTERVAL")) {
+                interval = ((splitted[i].split("="))[1]);
             }
         }
 
-        if(interval.equalsIgnoreCase("0"))
+        if (interval.equalsIgnoreCase("0"))
             return "";
-        if(frequency.equalsIgnoreCase("DAILY"))
-        {
-            if(interval.equalsIgnoreCase("1"))
-            {
-                finalText="Every Day";
+
+        if (frequency.equalsIgnoreCase("DAILY")) {
+            if (interval.equalsIgnoreCase("1") || interval.equalsIgnoreCase("")) {
+                finalText = "Every Day";
+            } else {
+                finalText = "Every " + interval + " day";
             }
-            else {
-                finalText="Every "+interval+" day";
+        } else if (frequency.equalsIgnoreCase("WEEKLY")) {
+            if (interval.equalsIgnoreCase("1") || interval.equalsIgnoreCase("")) {
+                finalText = "Every Week";
+            } else {
+                finalText = "Every " + interval + " Weeks";
             }
-        }
-        else if(frequency.equalsIgnoreCase("WEEKLY"))
-        {
-            if(interval.equalsIgnoreCase("1"))
-            {
-                finalText="Every Week";
+        } else if (frequency.equalsIgnoreCase("MONTHLY")) {
+            if (interval.equalsIgnoreCase("1") || interval.equalsIgnoreCase("")) {
+                finalText = "Every Month";
+            } else {
+                finalText = "Every " + interval + " Months";
             }
-            else {
-                finalText="Every "+interval+" Weeks";
-            }
-        }
-        else if(frequency.equalsIgnoreCase("MONTHLY"))
-        {
-            if(interval.equalsIgnoreCase("1"))
-            {
-                finalText="Every Month";
-            }
-            else {
-                finalText="Every "+interval+" Months";
-            }
-        }
-        else if(frequency.equalsIgnoreCase("YEARLY"))
-        {
-            if(interval.equalsIgnoreCase("1"))
-            {
-                finalText="Every Year";
-            }
-            else {
-                finalText="Every "+interval+" Years";
+        } else if (frequency.equalsIgnoreCase("YEARLY")) {
+            if (interval.equalsIgnoreCase("1") || interval.equalsIgnoreCase("")) {
+                finalText = "Every Year";
+            } else {
+                finalText = "Every " + interval + " Years";
             }
         }
         return finalText;
@@ -294,6 +293,8 @@ public class MeetingItems extends AbstractFlexibleItem<MeetingItems.Conversation
         TextView meetingFrequencyTextView;
         @BindView(R.id.meetingDescription)
         TextView meetingDescription;
+        @BindView(R.id.viewDetailsButton)
+        Button viewDetailsButton;
         ConversationItemViewHolder(View view, FlexibleAdapter adapter) {
             super(view, adapter);
             ButterKnife.bind(this, view);

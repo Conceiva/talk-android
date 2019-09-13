@@ -54,6 +54,7 @@ public abstract class BaseController extends ButterKnifeController {
     @Inject
     Context context;
 
+
     protected BaseController() {
         cleanTempCertPreference();
     }

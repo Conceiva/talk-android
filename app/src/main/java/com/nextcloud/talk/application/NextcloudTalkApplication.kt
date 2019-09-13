@@ -235,7 +235,7 @@ class NextcloudTalkApplication : MultiDexApplication(), LifecycleObserver {
         private val TAG = NextcloudTalkApplication::class.java.simpleName
         //region Singleton
         //endregion
-        lateinit var userUtils1: com.nextcloud.talk.utils.database.user.UserUtils;
+
         var sharedApplication: NextcloudTalkApplication? = null
             protected set;
         //endregion
