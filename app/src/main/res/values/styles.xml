@@ -91,6 +91,23 @@
         <item name="android:textSize">@dimen/font_big</item>
     </style>
 
+    <style name="editTextMain">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:background">@drawable/drawable_light_grey_border_grey_bg</item>
+        <item name="android:textColorHint">@color/white</item>
+    </style>
+    <style name="editTextBig"  parent="editTextMain">
+        <item name="android:textSize">@dimen/font_big</item>
+    </style>
+
+    <style name="editTextMedium"  parent="editTextMain">
+        <item name="android:textSize">@dimen/font_medium</item>
+    </style>
+    <style name="editTextSmall"  parent="editTextMain">
+        <item name="android:textSize">@dimen/font_small</item>
+    </style>
 
     <dimen name="dp_12">12dp</dimen>
     <dimen name="sp_12">12sp</dimen>

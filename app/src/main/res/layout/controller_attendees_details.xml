@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Nextcloud Talk application
+  ~
+  ~ @author Mario Danic
+  ~ Copyright (C) 2017 Mario Danic
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/generic_rv_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="@dimen/dp_8"
+    android:background="@drawable/drawable_light_grey_border"
+    >
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:listitem="@layout/rv_item_attendee" />
+
+    <LinearLayout
+        android:id="@+id/lnr_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@+id/recycler_view"
+        android:layout_marginTop="@dimen/dp_10"
+
+        >
+        <Button
+            android:id="@+id/addNewButton"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:textColor="@color/white"
+            android:textSize="@dimen/font_medium"
+            android:text="@string/lbl_add_new"
+            android:layout_weight="1"
+            android:background="@drawable/drawable_light_grey_border_grey_bg"
+            android:layout_marginRight="@dimen/dp_8"
+            android:textAllCaps="false"
+            />
+        <Button
+            android:id="@+id/selectFromContactButton"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:textColor="@color/white"
+            android:textSize="@dimen/font_medium"
+            android:text="@string/lbl_select_from_contact"
+            android:layout_weight="1"
+            android:background="@drawable/drawable_light_grey_border_grey_bg"
+            android:layout_marginLeft="@dimen/dp_8"
+            android:textAllCaps="false"
+            />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/sendInvitationEmailButton"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:textColor="@color/white"
+        android:textSize="@dimen/font_medium"
+        android:text="@string/lbl_send_inviation_mail"
+        android:layout_weight="1"
+        android:background="@drawable/drawable_light_grey_border_grey_bg"
+        android:layout_marginTop="@dimen/dp_10"
+        android:textAllCaps="false"
+        android:layout_below="@+id/lnr_button"
+        />
+
+</RelativeLayout>

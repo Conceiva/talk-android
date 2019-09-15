@@ -20,66 +20,26 @@
 
 package com.nextcloud.talk.controllers;
 
-import android.app.SearchManager;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.text.InputType;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.EditText;
-import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
-import android.widget.Spinner;
-import android.widget.Toast;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.SearchView;
-import androidx.core.graphics.drawable.RoundedBitmapDrawable;
-import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
-import androidx.core.view.MenuItemCompat;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import androidx.viewpager.widget.ViewPager;
 
-import com.bluelinelabs.conductor.RouterTransaction;
-import com.bluelinelabs.conductor.changehandler.HorizontalChangeHandler;
-import com.bluelinelabs.conductor.changehandler.VerticalChangeHandler;
 import com.chivorn.smartmaterialspinner.SmartMaterialSpinner;
-import com.facebook.common.executors.UiThreadImmediateExecutorService;
-import com.facebook.common.references.CloseableReference;
-import com.facebook.datasource.DataSource;
-import com.facebook.drawee.backends.pipeline.Fresco;
-import com.facebook.imagepipeline.core.ImagePipeline;
-import com.facebook.imagepipeline.datasource.BaseBitmapDataSubscriber;
-import com.facebook.imagepipeline.image.CloseableImage;
-import com.facebook.imagepipeline.request.ImageRequest;
-import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.tabs.TabLayout;
-import com.jaredrummler.materialspinner.MaterialSpinner;
-import com.kennyc.bottomsheet.BottomSheet;
 import com.nextcloud.talk.R;
-import com.nextcloud.talk.activities.MainActivity;
-import com.nextcloud.talk.adapters.items.MeetingItems;
 import com.nextcloud.talk.api.NcApi;
 import com.nextcloud.talk.application.NextcloudTalkApplication;
 import com.nextcloud.talk.controllers.base.BaseController;
-import com.nextcloud.talk.events.MeetingApiCallEvent;
-import com.nextcloud.talk.events.MeetingApiRefreshEvent;
-import com.nextcloud.talk.interfaces.ConversationMenuInterface;
 import com.nextcloud.talk.models.database.UserEntity;
 import com.nextcloud.talk.models.json.meetings.MeetingsReponse;
-import com.nextcloud.talk.utils.ApiUtils;
-import com.nextcloud.talk.utils.DisplayUtils;
 import com.nextcloud.talk.utils.bundle.BundleKeys;
 import com.nextcloud.talk.utils.database.user.UserUtils;
 import com.nextcloud.talk.utils.preferences.AppPreferences;
@@ -92,31 +52,19 @@ import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.component.VEvent;
 
 import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 
 import javax.inject.Inject;
 
 import autodagger.AutoInjector;
 import butterknife.BindView;
-import eu.davidea.fastscroller.FastScroller;
-import eu.davidea.flexibleadapter.FlexibleAdapter;
-import eu.davidea.flexibleadapter.common.SmoothScrollLinearLayoutManager;
-import eu.davidea.flexibleadapter.items.AbstractFlexibleItem;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
-import retrofit2.HttpException;
 
 @AutoInjector(NextcloudTalkApplication.class)
-public class MeetingDetailsTab extends BaseController {
+public class MeetingRepeatsTab extends BaseController {
 
     public static final String TAG = "PastMeetingsListController";
     @Inject
@@ -134,28 +82,40 @@ public class MeetingDetailsTab extends BaseController {
     @Inject
     AppPreferences appPreferences;
 
-    @BindView(R.id.meetingTitleEditText)
-    EditText meetingTitleEditText;
+    @BindView(R.id.repeatTimesEditText)
+    EditText repeatTimesEditText;
 
-    @BindView(R.id.descriptionEditText)
-    EditText descriptionEditText;
+    @BindView(R.id.repeatcountTextView)
+    TextView repeatcountTextView;
+
+    @BindView(R.id.repeatTimeLinearLayout)
+    LinearLayout repeatTimeLinearLayout;
+
+    @BindView(R.id.noneLinearLayout)
+    LinearLayout noneLinearLayout;
+
+    @BindView(R.id.frequencySpinner)
+    SmartMaterialSpinner frequencySpinner;
 
 
-    @BindView(R.id.contactStatusSpinner)
-    SmartMaterialSpinner contactStatusSpinner;
+    @BindView(R.id.repeatSpinner)
+    SmartMaterialSpinner repeatSpinner;
 
     private UserEntity currentUser;
     private LovelySaveStateHandler saveStateHandler;
     MeetingsReponse meetingsReponse;
+    ArrayList<String> choiceFrequency = new ArrayList<>();
+    ArrayList<String> choiceEnd = new ArrayList<>();
 
-    public MeetingDetailsTab(Bundle meetingDataBundle) {
+
+    public MeetingRepeatsTab(Bundle meetingDataBundle) {
         super(meetingDataBundle);
         meetingsReponse = meetingDataBundle.getParcelable(BundleKeys.INSTANCE.getKEY_MEETING_DETAILS());
     }
 
     @Override
     protected View inflateView(@NonNull LayoutInflater inflater, @NonNull ViewGroup container) {
-        return inflater.inflate(R.layout.tab_meeting_details, container, false);
+        return inflater.inflate(R.layout.tab_meeting_repeat, container, false);
     }
 
     @Override
@@ -191,13 +151,20 @@ public class MeetingDetailsTab extends BaseController {
     }
 
     private void prepareViews() {
-        ArrayList<String> choiceList = new ArrayList<>();
 
-        choiceList.add("When Shared show full event");
-        choiceList.add("When Shared show only busy");
-        choiceList.add("When Shared hide event");
 
-        meetingTitleEditText.setText(meetingsReponse.getDescription() + "");
+        choiceFrequency.clear();
+        choiceFrequency.add("None");
+        choiceFrequency.add("Every day");
+        choiceFrequency.add("Every week");
+        choiceFrequency.add("Every month");
+        choiceFrequency.add("Every year");
+
+        choiceEnd.clear();
+        choiceEnd.add("never");
+        choiceEnd.add("after");
+
+
         StringReader sin = new StringReader(meetingsReponse.getVcalendar());
         CalendarBuilder builder = new CalendarBuilder();
         Calendar cal = null;
@@ -206,21 +173,24 @@ public class MeetingDetailsTab extends BaseController {
             VEvent component = (VEvent) cal.getComponents().getComponent("VEVENT");
             Property rrule = component.getProperties().getProperty("LOCATION");
             String rule = rrule.getValue().toString();
-            meetingTitleEditText.setText(rule);
         } catch (ParserException e) {
             e.printStackTrace();
-        } catch (IOException e) {
-              e.printStackTrace();
-        }catch (Exception e) {
-             e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
-        contactStatusSpinner.setItem(choiceList);
-        contactStatusSpinner.setSelection(0);
-        contactStatusSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
+        frequencySpinner.setItem(choiceFrequency);
+        frequencySpinner.setSelection(0);
+        frequencySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
 //                Toast.makeText(getActivity(), choiceList.get(position), Toast.LENGTH_SHORT).show();
+                if(position==0) {
+                    manageVisibility(false);
+                }else {
+                    manageVisibility(true);
+                }
             }
 
             @Override
@@ -228,6 +198,48 @@ public class MeetingDetailsTab extends BaseController {
             }
         });
 
+
+        repeatSpinner.setItem(choiceEnd);
+        repeatSpinner.setSelection(0);
+        repeatSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
+//                Toast.makeText(getActivity(), choiceList.get(position), Toast.LENGTH_SHORT).show();
+                if(position==0) {
+                    manageTimesVisibility(false);
+                }else {
+                    manageTimesVisibility(true);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+            }
+        });
+
+    }
+
+    private void manageVisibility(boolean b)
+    {
+        if(b)
+        {
+            noneLinearLayout.setVisibility(View.VISIBLE);
+        }
+        else {
+            noneLinearLayout.setVisibility(View.GONE);
+        }
+    }
+
+
+    private void manageTimesVisibility(boolean b)
+    {
+        if(b)
+        {
+            repeatTimeLinearLayout.setVisibility(View.VISIBLE);
+        }
+        else {
+            repeatTimeLinearLayout.setVisibility(View.GONE);
+        }
     }
 
     private void dispose(@Nullable Disposable disposable) {

@@ -68,7 +68,7 @@ class MainActivity : BaseActivity(), ActionBarProvider {
     lateinit var sqlCipherDatabaseSource: SqlCipherDatabaseSource
 
     private var router: Router? = null
-
+    var isInRoot=false;
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -163,12 +163,19 @@ class MainActivity : BaseActivity(), ActionBarProvider {
         if (router!!.getControllerWithTag(LockedController.TAG) != null) {
             return
         }
+        if(router!!.backstackSize>1) {
             router!!.popToRoot()
-        if (!router!!.handleBack()) {
-            super.onBackPressed()
+            isInRoot=true;
         }
-        else{
+        else
+        {
 
+            super.onBackPressed()
+        /*    if (!router!!.handleBack()) {
+                super.onBackPressed()
+            } else {
+
+            }*/
         }
     }
 
