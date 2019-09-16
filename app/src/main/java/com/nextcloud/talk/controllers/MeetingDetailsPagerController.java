@@ -38,6 +38,7 @@ import androidx.annotation.NonNull;
 import androidx.core.graphics.drawable.RoundedBitmapDrawable;
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.viewpager.widget.ViewPager;
+
 import com.bluelinelabs.conductor.Router;
 import com.bluelinelabs.conductor.RouterTransaction;
 import com.bluelinelabs.conductor.changehandler.TransitionChangeHandlerCompat;
@@ -137,19 +138,19 @@ public class MeetingDetailsPagerController extends BaseController {
     private RouterPagerAdapter pagerAdapter;
     MeetingsReponse meetingsReponse;
     Bundle meetingData;
+
     public MeetingDetailsPagerController(Bundle bundle) {
         super(bundle);
         setHasOptionsMenu(false);
-        meetingData=bundle;
+        meetingData = bundle;
         meetingsReponse = bundle.getParcelable(BundleKeys.INSTANCE.getKEY_MEETING_DETAILS());
         pagerAdapter = new RouterPagerAdapter(this) {
             @Override
-            public  void configureRouter(@NonNull Router router, int position) {
+            public void configureRouter(@NonNull Router router, int position) {
                 if (!router.hasRootController()) {
 
                 }
-                switch (position)
-                {
+                switch (position) {
                     case 0:
                         router.setRoot(RouterTransaction.with(new MeetingDetailsTab(meetingData))
                                 .pushChangeHandler(new VerticalChangeHandler())
@@ -162,32 +163,37 @@ public class MeetingDetailsPagerController extends BaseController {
                                 .popChangeHandler(new VerticalChangeHandler())
                                 .tag(MeetingDetailsTab.TAG));
                         break;
+
+                    case 3:
+                        router.setRoot(RouterTransaction.with(new MeetingRepeatsTab(meetingData))
+                                .pushChangeHandler(new VerticalChangeHandler())
+                                .popChangeHandler(new VerticalChangeHandler())
+                                .tag(MeetingDetailsTab.TAG));
+                        break;
                 }
             }
 
             @Override
-            public  int getCount() {
+            public int getCount() {
                 return 4;
             }
 
             @Override
-            public  CharSequence getPageTitle(int position)
-            {
-                String title="";
+            public CharSequence getPageTitle(int position) {
+                String title = "";
 
-                switch (position)
-                {
+                switch (position) {
                     case 0:
-                        title=getApplicationContext().getResources().getString(R.string.details_tab);
+                        title = getApplicationContext().getResources().getString(R.string.details_tab);
                         break;
                     case 1:
-                        title=getApplicationContext().getResources().getString(R.string.details_attendees);
+                        title = getApplicationContext().getResources().getString(R.string.details_attendees);
                         break;
                     case 2:
-                        title=getApplicationContext().getResources().getString(R.string.details_reminders);
+                        title = getApplicationContext().getResources().getString(R.string.details_reminders);
                         break;
                     case 3:
-                        title=getApplicationContext().getResources().getString(R.string.details_repeating);
+                        title = getApplicationContext().getResources().getString(R.string.details_repeating);
                         break;
                 }
                 return title;
@@ -196,7 +202,7 @@ public class MeetingDetailsPagerController extends BaseController {
     }
 
     @Override
-    protected  void onViewBound(@NonNull View view) {
+    protected void onViewBound(@NonNull View view) {
         super.onViewBound(view);
         viewPager.setAdapter(pagerAdapter);
         tabLayout.setupWithViewPager(viewPager);
@@ -206,21 +212,19 @@ public class MeetingDetailsPagerController extends BaseController {
 
     }
 
-    private void fillUpFieldsWithData()
-    {
+    private void fillUpFieldsWithData() {
         meetingTitleEditText.setText(meetingsReponse.getTitle());
-        meetingIDTextView.setText("Meeting ID: "+meetingsReponse.getMeetingid());
+        meetingIDTextView.setText("Meeting ID: " + meetingsReponse.getMeetingid());
         meetingTitleEditText.setText(meetingsReponse.getTitle());
-        meetingStartDateTextView.setText(DateUtils.INSTANCE.getDateTimeStringFromTimestamp(meetingsReponse.getStart(),"MM/dd/yyyy",meetingsReponse.getTimezone()));
-        meetingStartTimeTextView.setText(DateUtils.INSTANCE.getDateTimeStringFromTimestamp(meetingsReponse.getStart(),"hh:mm a",meetingsReponse.getTimezone()));
+        meetingStartDateTextView.setText(DateUtils.INSTANCE.getDateTimeStringFromTimestamp(meetingsReponse.getStart(), "MM/dd/yyyy", meetingsReponse.getTimezone()));
+        meetingStartTimeTextView.setText(DateUtils.INSTANCE.getDateTimeStringFromTimestamp(meetingsReponse.getStart(), "hh:mm a", meetingsReponse.getTimezone()));
 
-        meetingEndsDateTextView.setText(DateUtils.INSTANCE.getDateTimeStringFromTimestamp(meetingsReponse.getEnd(),"MM/dd/yyyy",meetingsReponse.getTimezone()));
-        meetingEndsTimeTextView.setText(DateUtils.INSTANCE.getDateTimeStringFromTimestamp(meetingsReponse.getEnd(),"hh:mm a",meetingsReponse.getTimezone()));
-        if(meetingsReponse.isJsonMemberPublic())
-        {
+        meetingEndsDateTextView.setText(DateUtils.INSTANCE.getDateTimeStringFromTimestamp(meetingsReponse.getEnd(), "MM/dd/yyyy", meetingsReponse.getTimezone()));
+        meetingEndsTimeTextView.setText(DateUtils.INSTANCE.getDateTimeStringFromTimestamp(meetingsReponse.getEnd(), "hh:mm a", meetingsReponse.getTimezone()));
+        if (meetingsReponse.isJsonMemberPublic()) {
             meetingTypeCheckBox.setChecked(true);
         }
-        String attendeesString=meetingsReponse.getAttendees();
+        String attendeesString = meetingsReponse.getAttendees();
         StringReader sin = new StringReader(meetingsReponse.getVcalendar());
 
         CalendarBuilder builder = new CalendarBuilder();
@@ -230,17 +234,16 @@ public class MeetingDetailsPagerController extends BaseController {
 
             VEvent component = (VEvent) cal.getComponents().getComponent("VEVENT");
             Property rrule = component.getProperties().getProperty("RRULE");
-            if(rrule!=null) {
+            if (rrule != null) {
                 String rule = rrule.getValue().toString();
-                String startingOn = " Starting on "+ DateUtils.INSTANCE.getDateTimeStringFromTimestamp(meetingsReponse.getStart(), "dd MMMM yyyy HH:mm", meetingsReponse.getTimezone());
+                String startingOn = " Starting on " + DateUtils.INSTANCE.getDateTimeStringFromTimestamp(meetingsReponse.getStart(), "dd MMMM yyyy HH:mm", meetingsReponse.getTimezone());
                 if (getTextForFrequency(rule).equalsIgnoreCase("")) {
                     meetingFrequencyTextView.setVisibility(View.GONE);
                 } else {
                     meetingFrequencyTextView.setVisibility(View.VISIBLE);
                     meetingFrequencyTextView.setText(getTextForFrequency(rule) + " " + startingOn);
                 }
-            }
-            else {
+            } else {
                 meetingFrequencyTextView.setVisibility(View.GONE);
             }
             //FREQ=YEARLY;BYMONTH=4;BYDAY=1SU
@@ -253,8 +256,7 @@ public class MeetingDetailsPagerController extends BaseController {
 
     }
 
-    private String getTextForFrequency(String rule)
-    {
+    private String getTextForFrequency(String rule) {
         String[] splitted = rule.split(";");
         String frequency = "", interval = "";
 
@@ -304,9 +306,11 @@ public class MeetingDetailsPagerController extends BaseController {
     @Override
     protected void onAttach(@NonNull View view) {
         super.onAttach(view);
+        getActionBar().setDisplayHomeAsUpEnabled(false);
     }
+
     @Override
-    protected  void onDestroyView(@NonNull View view) {
+    protected void onDestroyView(@NonNull View view) {
         viewPager.setAdapter(null);
         super.onDestroyView(view);
     }
@@ -344,14 +348,14 @@ public class MeetingDetailsPagerController extends BaseController {
 
     @NonNull
     @Override
-    protected  View inflateView(@NonNull LayoutInflater inflater, @NonNull ViewGroup container) {
+    protected View inflateView(@NonNull LayoutInflater inflater, @NonNull ViewGroup container) {
         return inflater.inflate(R.layout.controller_meeting_details, container, false);
     }
 
     private void loadUserAvatar(MenuItem menuItem) {
         if (getActivity() != null) {
 
-            currentUser=NextcloudTalkApplication.Companion.getSharedApplication().userUtils.getCurrentUser();
+            currentUser = NextcloudTalkApplication.Companion.getSharedApplication().userUtils.getCurrentUser();
 
             int avatarSize = (int) DisplayUtils.convertDpToPixel(menuItem.getIcon().getIntrinsicHeight(), getActivity());
             ImageRequest imageRequest = DisplayUtils.getImageRequestForUrl(ApiUtils.getUrlForAvatarWithNameAndPixels(currentUser.getBaseUrl(),

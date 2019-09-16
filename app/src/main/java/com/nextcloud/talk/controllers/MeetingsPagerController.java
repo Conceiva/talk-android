@@ -151,7 +151,7 @@ public class MeetingsPagerController  extends BaseController {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.menu_conversation_plus_filter, menu);
+        inflater.inflate(R.menu.menu_meetings, menu);
 
     }
 

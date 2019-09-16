@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Nextcloud Talk application
+  ~
+  ~ @author Mario Danic
+  ~ Copyright (C) 2017-2018 Mario Danic <mario@lovelyhq.com>
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/drawable_light_grey_border"
+
+    >
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="@dimen/dp_10"
+        android:orientation="vertical">
+
+        <com.chivorn.smartmaterialspinner.SmartMaterialSpinner
+            android:id="@+id/frequencySpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_10"
+            android:background="@drawable/drawable_light_grey_border_grey_bg"
+            android:paddingStart="@dimen/dp_8"
+            android:paddingTop="@dimen/dp_8"
+            android:paddingBottom="0dp"
+
+            app:smsp_arrowPaddingTop="3dp"
+            app:smsp_enableErrorLabel="false"
+            app:smsp_enableFloatingLabel="false"
+            app:smsp_hint=""
+            app:smsp_itemColor="@color/white"
+            app:smsp_itemListColor="#ffffff"
+            app:smsp_multilineError="false"
+            app:smsp_selectedItemListColor="@color/white" />
+
+<LinearLayout
+    android:id="@+id/noneLinearLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/repeatEveryTextView"
+                style="@style/textViewMedium"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:text="@string/str_label_repeat_every" />
+
+            <EditText
+                android:id="@+id/repeatDaysEditText"
+                style="@style/editTextBig"
+                android:layout_width="0dp"
+                android:layout_marginTop="@dimen/dp_10"
+                android:layout_weight="1"
+                android:hint="@string/str_location"
+                android:padding="@dimen/dp_8"
+                android:inputType="number"
+                android:text="1"></EditText>
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/endRepeatTextView"
+                style="@style/textViewMedium"
+                android:layout_width="0dp"
+
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:text="@string/str_label_repeat_end" />
+
+            <com.chivorn.smartmaterialspinner.SmartMaterialSpinner
+                android:id="@+id/repeatSpinner"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp_10"
+                android:background="@drawable/drawable_light_grey_border_grey_bg"
+                android:paddingTop="@dimen/dp_8"
+                android:paddingBottom="0dp"
+                android:layout_weight="1"
+                android:paddingStart="@dimen/dp_10"
+                app:smsp_arrowPaddingTop="3dp"
+                app:smsp_enableErrorLabel="false"
+                app:smsp_enableFloatingLabel="false"
+                app:smsp_hint=""
+                app:smsp_itemColor="@color/white"
+                app:smsp_itemListColor="#ffffff"
+                app:smsp_multilineError="false"
+                app:smsp_selectedItemListColor="@color/white"
+                 />
+        </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/repeatTimeLinearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2"
+        android:layout_gravity="right"
+        android:gravity="right"
+        android:layout_marginTop="@dimen/dp_10"
+        >
+
+
+
+        <EditText
+            android:id="@+id/repeatTimesEditText"
+            style="@style/editTextBig"
+            android:layout_width="0dp"
+            android:layout_weight="0.5"
+            android:hint="@string/str_location"
+            android:padding="@dimen/dp_8"
+            android:layout_marginLeft="@dimen/dp_10"
+            android:inputType="number"
+            android:text="1"></EditText>
+
+        <TextView
+            android:id="@+id/repeatcountTextView"
+            style="@style/textViewMedium"
+            android:layout_width="0dp"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="0.5"
+            android:layout_marginLeft="@dimen/dp_10"
+            android:text="@string/str_label_times" />
+    </LinearLayout>
+
+</LinearLayout>
+
+
+
+
+
+    </LinearLayout>
+</RelativeLayout>

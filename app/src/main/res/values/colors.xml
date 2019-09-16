@@ -53,7 +53,6 @@
     <color name="controller_call_incomingCallTextView">#E9FFFFFF</color>
     <color name="grey950">#111111</color>
 
-
     <!-- Emoji list in chat window -->
     <color name="emoji_background">#eceff1</color>
     <color name="emoji_icons">#61000000</color>
@@ -78,8 +77,10 @@
     <!-- "Conversation Info" window -->
     <color name="bg_controller_conv_info">@color/bg_default</color>
     <color name="bg_meeting_title">#007a8c</color>
-    <color name="bg_meeting_item_background">#555555</color>
+    <color name="bg_meeting_item_background">#444444</color>
+    <color name="bg_meeting_detail_light_grey">#666666</color>
     <color name="nc_meeting_tab_normal">#666666</color>
+    <color name="nc_meeting_edittext_border">#888888</color>
     <color name="bg_theme_green">#23ce6b</color>
 
 </resources>

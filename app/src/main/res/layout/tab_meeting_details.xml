@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Nextcloud Talk application
+  ~
+  ~ @author Mario Danic
+  ~ Copyright (C) 2017-2018 Mario Danic <mario@lovelyhq.com>
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@drawable/drawable_light_grey_border"
+
+    >
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="@dimen/dp_10"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/meetingTitleEditText"
+            style="@style/editTextBig"
+            android:layout_width="match_parent"
+            android:padding="@dimen/dp_8"
+            android:text=""
+            android:hint="@string/str_location"
+            ></EditText>
+
+        <EditText
+            android:id="@+id/descriptionEditText"
+            style="@style/editTextBig"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="top|left"
+            android:inputType="textMultiLine"
+            android:lines="5"
+            android:maxLines="10"
+            android:scrollbars="vertical"
+            android:layout_marginTop="@dimen/dp_10"
+            android:hint="Description"
+            android:padding="@dimen/dp_8"
+            />
+
+
+        <com.chivorn.smartmaterialspinner.SmartMaterialSpinner
+            android:id="@+id/contactStatusSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/drawable_light_grey_border_grey_bg"
+            android:layout_marginTop="@dimen/dp_10"
+            android:paddingTop="@dimen/dp_8"
+            android:paddingBottom="0dp"
+            android:paddingStart="@dimen/dp_8"
+
+            app:smsp_arrowPaddingTop="3dp"
+            app:smsp_enableErrorLabel="false"
+            app:smsp_enableFloatingLabel="false"
+            app:smsp_hint=""
+            app:smsp_itemColor="@color/white"
+            app:smsp_itemListColor="#ffffff"
+            app:smsp_multilineError="false"
+            app:smsp_selectedItemListColor="@color/white" />
+       <!-- <com.jaredrummler.materialspinner.MaterialSpinner
+            android:id="@+id/contactStatusSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_10"
+            app:ms_arrow_tint="@color/black"
+            app:ms_background_color="@color/bg_meeting_detail_light_grey"
+
+            app:ms_text_color="@color/bg_meeting_item_background"
+            app:ms_background_selector="@color/white"
+            app:ms_dropdown_height="100dp"
+            />-->
+
+    </LinearLayout>
+</RelativeLayout>
