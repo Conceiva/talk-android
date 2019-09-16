@@ -62,8 +62,7 @@
 
     <application
         android:name=".application.NextcloudTalkApplication"
-        android:allowBackup="true"
-        android:fullBackupContent="@xml/backup_config"
+        android:allowBackup="false"
         android:icon="@drawable/ic_logo_icon"
         android:label="@string/nc_app_name"
         android:largeHeap="true"

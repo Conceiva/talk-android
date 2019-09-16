@@ -223,7 +223,7 @@ public class ChatController extends BaseController implements MessagesListAdapte
         if (args.containsKey(BundleKeys.INSTANCE.getKEY_ACTIVE_CONVERSATION())) {
             this.currentConversation = Parcels.unwrap(args.getParcelable(BundleKeys.INSTANCE.getKEY_ACTIVE_CONVERSATION()));
             if (currentConversation != null) {
-                conversationName = currentConversation.getDisplayName();
+//                conversationName = currentConversation.getDisplayName();
             }
         }
 

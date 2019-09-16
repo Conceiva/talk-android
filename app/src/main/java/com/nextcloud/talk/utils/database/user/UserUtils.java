@@ -201,6 +201,7 @@ public class UserUtils {
                                                      @Nullable String certificateAlias,
                                                      @Nullable String externalSignalingServer) {
         Result findUserQueryResult;
+        String email="",finalUserName=username;
         if (internalId == null) {
             findUserQueryResult = dataStore.select(User.class).where(UserEntity.USERNAME.eq(username).
                     and(UserEntity.BASE_URL.eq(serverUrl))).limit(1).get();
@@ -209,12 +210,23 @@ public class UserUtils {
         }
 
         UserEntity user = (UserEntity) findUserQueryResult.firstOrNull();
+        if(username!=null) {
+
+            String[] splittedUser = username.split(",,");
+
+
+            if (splittedUser.length > 1) {
+                email = splittedUser[1];
+            }
+            finalUserName = splittedUser[0];
+        }
 
         if (user == null) {
             user = new UserEntity();
             user.setBaseUrl(serverUrl);
-            user.setUsername(username);
+            user.setUsername(finalUserName);
             user.setToken(token);
+            user.setEmail(email);
 
             if (!TextUtils.isEmpty(displayName)) {
                 user.setDisplayName(displayName);

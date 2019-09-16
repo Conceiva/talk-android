@@ -259,6 +259,11 @@ public class MeetingsReponse implements User, Persistable, Parcelable {
 	}
 
 	@Override
+	public String getEmail() {
+		return null;
+	}
+
+	@Override
 	public String getBaseUrl() {
 		return null;
 	}

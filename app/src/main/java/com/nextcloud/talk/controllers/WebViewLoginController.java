@@ -175,6 +175,7 @@ public class WebViewLoginController extends BaseController {
         webView.getSettings().setSavePassword(false);
         webView.getSettings().setRenderPriority(WebSettings.RenderPriority.HIGH);
         webView.clearCache(true);
+        webView.addJavascriptInterface(new WebViewHTMLReader(),"Android");
         webView.clearFormData();
         webView.clearHistory();
         WebView.clearClientCertPreferences(null);
@@ -204,7 +205,10 @@ public class WebViewLoginController extends BaseController {
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
+
                 if (url.startsWith(assembledPrefix)) {
+
+
                     parseAndLoginFromWebView(url);
                     return true;
                 }
@@ -369,6 +373,8 @@ public class WebViewLoginController extends BaseController {
 
             if (!isPasswordUpdate && finalMessageType == null) {
                 Bundle bundle = new Bundle();
+
+                bundle.putString(BundleKeys.INSTANCE.getKEY_EMAIL(), username);
                 bundle.putString(BundleKeys.INSTANCE.getKEY_USERNAME(), loginData.getUsername());
                 bundle.putString(BundleKeys.INSTANCE.getKEY_TOKEN(), loginData.getToken());
                 bundle.putString(BundleKeys.INSTANCE.getKEY_BASE_URL(), loginData.getServerUrl());
@@ -415,6 +421,17 @@ public class WebViewLoginController extends BaseController {
 
                 }
             }
+        }
+    }
+
+    public class WebViewHTMLReader
+    {
+        @JavascriptInterface
+        @SuppressWarnings("unused")
+        public void processHTML(String html)
+        {
+            String htmlData=html;
+            // process the html as needed by the app
         }
     }
 

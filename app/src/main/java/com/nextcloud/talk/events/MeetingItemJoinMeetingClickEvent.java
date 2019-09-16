@@ -2,7 +2,7 @@
  * Nextcloud Talk application
  *
  * @author Mario Danic
- * Copyright (C) 2017 Mario Danic <mario@lovelyhq.com>
+ * Copyright (C) 2017-2018 Mario Danic <mario@lovelyhq.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,16 +17,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.nextcloud.talk.models;
+
+package com.nextcloud.talk.events;
+
+import com.nextcloud.talk.models.json.meetings.MeetingsReponse;
 
 import lombok.Data;
-import org.parceler.Parcel;
 
-import java.util.Map;
-
-@Parcel
 @Data
-public class RetrofitBucket {
-    public String url;
-    public Map<String, String> queryMap;
+public class MeetingItemJoinMeetingClickEvent {
+    private MeetingsReponse meetingsReponse;
+    public MeetingItemJoinMeetingClickEvent(MeetingsReponse meetingsReponse) {
+        this.meetingsReponse = meetingsReponse;
+    }
+
+    public MeetingsReponse getResponse()
+    {
+        return meetingsReponse;
+    }
+
+
 }

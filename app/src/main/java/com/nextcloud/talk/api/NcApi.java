@@ -26,6 +26,9 @@ import com.nextcloud.talk.models.json.capabilities.CapabilitiesOverall;
 import com.nextcloud.talk.models.json.chat.ChatOverall;
 import com.nextcloud.talk.models.json.generic.GenericOverall;
 import com.nextcloud.talk.models.json.generic.Status;
+
+import com.nextcloud.talk.models.json.landingpage.LandingPageOcs;
+import com.nextcloud.talk.models.json.landingpage.LandingPageResponse;
 import com.nextcloud.talk.models.json.meetings.MeetingsReponse;
 import com.nextcloud.talk.models.json.mention.MentionOverall;
 import com.nextcloud.talk.models.json.notifications.NotificationOverall;
@@ -93,6 +96,23 @@ public interface NcApi {
     @POST
     Observable<RoomOverall> createRoom(@Header("Authorization") String authorization, @Url String url,
                                        @QueryMap Map<String, String> options);
+
+        /*
+        QueryMap items are as follows:
+            - "roomType" : ""
+            - "invite" : ""
+
+        Server URL is: baseUrl + ocsApiVersion + spreedApiVersion + /room
+     */
+
+    /*@POST
+    @Headers("Cache-Control: no-cache")
+    Observable<LandingPageResponse> getLandingPage(@Header("Authorization") String authorization, @Url String url,
+                                              @QueryMap Map<String, String> options);*/
+    @FormUrlEncoded
+    @POST
+    Observable<LandingPageResponse> getLandingPage(@Url String url,
+                                                   @Nullable @Field("u") String email,@Nullable @Field("p") String pin);
 
     /*
         QueryMap items are as follows:

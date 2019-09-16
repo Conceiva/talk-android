@@ -44,6 +44,8 @@ public interface User extends Parcelable, Persistable, Serializable {
 
     String getUsername();
 
+    String getEmail();
+
     String getBaseUrl();
 
     String getToken();

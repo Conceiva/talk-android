@@ -36,6 +36,7 @@ public class ApiUtils {
     private static String ocsApiVersion = "/ocs/v2.php";
     private static String spreedApiVersion = "/apps/spreed/api/v1";
     private static String spreedMeetingsApiVersion = "/apps/spreedcom-meetingmanager/api/v1";
+    private static String spreedLandingPage = "/apps/spreedcom-landingpage/query";
 
     private static String userAgent = "Mozilla/5.0 (Android) Nextcloud-Talk v";
 
@@ -133,6 +134,23 @@ public class ApiUtils {
 
         if (conversationName != null) {
             queryMap.put("roomName", conversationName);
+        }
+
+        retrofitBucket.setQueryMap(queryMap);
+
+        return retrofitBucket;
+    }
+
+    public static RetrofitBucket getRetrofitBucketForLandingPage(String baseUrl, String userEmail,
+                                                                @Nullable String pin,
+                                                                @Nullable String meetingID) {
+        RetrofitBucket retrofitBucket = new RetrofitBucket();
+        retrofitBucket.setUrl(baseUrl + ocsApiVersion + spreedLandingPage + "/"+meetingID);
+        Map<String, String> queryMap = new HashMap<>();
+
+        queryMap.put("u", userEmail);
+        if (pin != null && !pin.equalsIgnoreCase("")) {
+            queryMap.put("p", pin);
         }
 
         retrofitBucket.setQueryMap(queryMap);

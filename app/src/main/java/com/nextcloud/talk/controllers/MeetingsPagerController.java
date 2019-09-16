@@ -137,6 +137,9 @@ public class MeetingsPagerController  extends BaseController {
         super.onViewBound(view);
         viewPager.setAdapter(pagerAdapter);
         tabLayout.setupWithViewPager(viewPager);
+        if (getActionBar() != null) {
+            getActionBar().show();
+        }
     }
     @Override
     protected void onAttach(@NonNull View view) {

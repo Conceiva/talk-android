@@ -21,10 +21,13 @@
 package com.nextcloud.talk.activities;
 
 import android.app.KeyguardManager
+import android.app.PendingIntent.getActivity
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
 import autodagger.AutoInjector
@@ -35,21 +38,40 @@ import com.bluelinelabs.conductor.Router
 import com.bluelinelabs.conductor.RouterTransaction
 import com.bluelinelabs.conductor.changehandler.HorizontalChangeHandler
 import com.bluelinelabs.conductor.changehandler.VerticalChangeHandler
+import com.bluelinelabs.conductor.internal.NoOpControllerChangeHandler
 import com.google.android.material.appbar.MaterialToolbar
 import com.nextcloud.talk.R
 import com.nextcloud.talk.activities.BaseActivity
+import com.nextcloud.talk.adapters.items.CallItem
+import com.nextcloud.talk.adapters.items.ConversationItem
+import com.nextcloud.talk.api.NcApi
 import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.controllers.*
 import com.nextcloud.talk.controllers.base.providers.ActionBarProvider
 import com.nextcloud.talk.events.MeetingItemClickEvent
+import com.nextcloud.talk.events.MeetingItemJoinMeetingClickEvent
+import com.nextcloud.talk.models.database.UserEntity
+import com.nextcloud.talk.models.json.conversations.Conversation
+import com.nextcloud.talk.models.json.meetings.MeetingsReponse
+import com.nextcloud.talk.models.json.participants.Participant
+import com.nextcloud.talk.utils.ApiUtils
 import com.nextcloud.talk.utils.ConductorRemapping
+import com.nextcloud.talk.utils.PreferenceHelper
 import com.nextcloud.talk.utils.SecurityUtils
 import com.nextcloud.talk.utils.bundle.BundleKeys
 import com.nextcloud.talk.utils.database.user.UserUtils
+import eu.davidea.flexibleadapter.FlexibleAdapter
+import eu.davidea.flexibleadapter.items.AbstractFlexibleItem
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 import io.requery.Persistable
 import io.requery.android.sqlcipher.SqlCipherDatabaseSource
 import io.requery.reactivex.ReactiveEntityStore
 import org.greenrobot.eventbus.Subscribe
+import org.parceler.Parcels
+import retrofit2.HttpException
+import java.util.*
 import javax.inject.Inject
 
 @AutoInjector(NextcloudTalkApplication::class)
@@ -67,8 +89,19 @@ class MainActivity : BaseActivity(), ActionBarProvider {
     @Inject
     lateinit var sqlCipherDatabaseSource: SqlCipherDatabaseSource
 
+    /*@Inject
+    internal var ncApi: NcApi? = null
+    */
+    @Inject
+    lateinit var ncApi: NcApi
+
+    private var roomsQueryDisposable: Disposable? = null
+    private var adapter: FlexibleAdapter<AbstractFlexibleItem<*>>? = null
+    private var isRefreshing: Boolean = false
     private var router: Router? = null
     var isInRoot=false;
+    private var credentials: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -190,7 +223,90 @@ class MainActivity : BaseActivity(), ActionBarProvider {
                 .popChangeHandler(HorizontalChangeHandler()))
     }
 
+    @Subscribe
+    fun onJoinMeetinItemClicked(meetingResponse: MeetingItemJoinMeetingClickEvent)
+    {
+        fetchData(meetingResponse.response)
+    }
+
     companion object {
         private val TAG = "MainActivity"
     }
+
+    private fun fetchData(meetingResponse: MeetingsReponse) {
+        dispose(null)
+
+        isRefreshing = true
+         var currentUser: UserEntity? = userUtils.currentUser
+        credentials = ApiUtils.getCredentials(currentUser?.getUsername(), currentUser?.getToken())
+
+        var retrofitBucket = ApiUtils.getRetrofitBucketForLandingPage(currentUser?.getBaseUrl(), currentUser?.email, meetingResponse.modpin, meetingResponse.meetingid.toString())
+
+
+        roomsQueryDisposable = ncApi?.getLandingPage( retrofitBucket.url, currentUser?.email,meetingResponse.modpin)?.subscribeOn(Schedulers.io())
+                ?.observeOn(AndroidSchedulers.mainThread())?.subscribe({ landingPageResponse ->
+
+                    if(landingPageResponse!=null)
+                    {
+                        if (meetingResponse != null ) {
+
+
+                            if(landingPageResponse.landingPageOcs.data.meetingSession!=null) {
+                                PreferenceHelper.setSharedPreferenceString(NextcloudTalkApplication.sharedApplication!!.applicationContext, "COOKIE", landingPageResponse.landingPageOcs.data.meetingSession)
+                            }
+                            val conversation: Conversation = Conversation()
+                            val bundle = Bundle()
+                            bundle.putParcelable(BundleKeys.KEY_USER_ENTITY, currentUser)
+                            bundle.putString(BundleKeys.KEY_ROOM_TOKEN, meetingResponse.meetingid.toString())
+                            bundle.putString(BundleKeys.KEY_ROOM_ID, meetingResponse.modpin)
+
+
+                                currentUser = userUtils.currentUser
+
+
+                                    bundle.putParcelable(BundleKeys.KEY_ACTIVE_CONVERSATION, Parcels.wrap(conversation))
+
+
+                            /*this!!.router?.let {
+                                ConductorRemapping.remapChatController(it, userUtils.currentUser.getId(),
+                                        meetingResponse.meetingid.toString(), bundle, false)*/
+                            }
+
+                        }
+
+
+
+                    }
+
+
+        }, { throwable ->
+
+            if (throwable is HttpException) {
+                val exception = throwable as HttpException
+
+            }
+
+            dispose(roomsQueryDisposable)
+        }, {
+            dispose(roomsQueryDisposable)
+
+            isRefreshing = false
+        })
+
+    }
+
+    private fun dispose(disposable: Disposable?) {
+        var disposable = disposable
+        if (disposable != null && !disposable.isDisposed) {
+            disposable.dispose()
+            disposable = null
+        } else if (disposable == null &&
+                roomsQueryDisposable != null && !roomsQueryDisposable!!.isDisposed()) {
+            roomsQueryDisposable!!.dispose()
+            roomsQueryDisposable = null
+
+        }
+    }
+
+
 }

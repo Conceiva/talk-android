@@ -44,6 +44,7 @@ import com.nextcloud.talk.application.NextcloudTalkApplication;
 
 import com.nextcloud.talk.events.MeetingApiCallEvent;
 import com.nextcloud.talk.events.MeetingItemClickEvent;
+import com.nextcloud.talk.events.MeetingItemJoinMeetingClickEvent;
 import com.nextcloud.talk.models.database.UserEntity;
 import com.nextcloud.talk.models.json.chat.ChatMessage;
 import com.nextcloud.talk.models.json.conversations.Conversation;
@@ -175,7 +176,6 @@ public class MeetingItems extends AbstractFlexibleItem<MeetingItems.Conversation
         Calendar cal = null;
         try {
             cal = builder.build(sin);
-
             VEvent component = (VEvent) cal.getComponents().getComponent("VEVENT");
             Property rrule = component.getProperties().getProperty("RRULE");
             if(rrule!=null) {
@@ -202,6 +202,12 @@ public class MeetingItems extends AbstractFlexibleItem<MeetingItems.Conversation
             @Override
             public void onClick(View view) {
                 EventBus.getDefault().post(new MeetingItemClickEvent(meeting));
+            }
+        });
+        holder.joinMeetingButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                EventBus.getDefault().post(new MeetingItemJoinMeetingClickEvent(meeting));
             }
         });
 
@@ -295,6 +301,8 @@ public class MeetingItems extends AbstractFlexibleItem<MeetingItems.Conversation
         TextView meetingDescription;
         @BindView(R.id.viewDetailsButton)
         Button viewDetailsButton;
+        @BindView(R.id.joinMeetingButton)
+        Button joinMeetingButton;
         ConversationItemViewHolder(View view, FlexibleAdapter adapter) {
             super(view, adapter);
             ButterKnife.bind(this, view);

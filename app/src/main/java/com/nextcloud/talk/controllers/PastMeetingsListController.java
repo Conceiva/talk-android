@@ -469,9 +469,9 @@ public class PastMeetingsListController extends BaseController implements Search
             return true;
         }
         Calendar c = Calendar.getInstance();
-        int utcOffset = c.get(Calendar.ZONE_OFFSET) + c.get(Calendar.DST_OFFSET);
-        Long utcMilliseconds = c.getTimeInMillis() + utcOffset;
-        double currentTimeStamp = utcMilliseconds/1000;
+//        int utcOffset = c.get(Calendar.ZONE_OFFSET) + c.get(Calendar.DST_OFFSET);
+        Long utcMilliseconds = c.getTimeInMillis() ;
+        long currentTimeStamp = utcMilliseconds/1000;
         if (meeting.getEnd()>currentTimeStamp)
         {
             return true;

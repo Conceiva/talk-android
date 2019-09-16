@@ -22,6 +22,7 @@ package com.nextcloud.talk.utils.bundle
 
 object BundleKeys {
     val KEY_USERNAME = "KEY_USERNAME"
+    val KEY_EMAIL = "KEY_EMAIL"
     val KEY_TOKEN = "KEY_TOKEN"
     val KEY_BASE_URL = "KEY_BASE_URL"
     val KEY_IS_ACCOUNT_IMPORT = "KEY_IS_ACCOUNT_IMPORT"

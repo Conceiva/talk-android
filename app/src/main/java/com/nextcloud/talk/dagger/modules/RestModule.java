@@ -32,6 +32,7 @@ import com.nextcloud.talk.api.NcApi;
 import com.nextcloud.talk.application.NextcloudTalkApplication;
 import com.nextcloud.talk.utils.ApiUtils;
 import com.nextcloud.talk.utils.LoggingUtils;
+import com.nextcloud.talk.utils.PreferenceHelper;
 import com.nextcloud.talk.utils.database.user.UserUtils;
 import com.nextcloud.talk.utils.preferences.AppPreferences;
 import com.nextcloud.talk.utils.singletons.AvatarStatusCodeHolder;
@@ -185,8 +186,8 @@ public class RestModule {
         httpClient.writeTimeout(45, TimeUnit.SECONDS);
 
         httpClient.cookieJar(new JavaNetCookieJar(cookieManager));
+//        httpClient.cache(null);
         httpClient.cache(cache);
-
         // Trust own CA and all self-signed certs
         httpClient.sslSocketFactory(sslSocketFactoryCompat, magicTrustManager);
         httpClient.retryOnConnectionFailure(true);
@@ -233,19 +234,41 @@ public class RestModule {
         @Override
         public Response intercept(@NonNull Chain chain) throws IOException {
             Request original = chain.request();
-            Request request = original.newBuilder()
-                    .header("User-Agent", ApiUtils.getUserAgent())
-                    .header("Accept", "application/json")
-                    .header("OCS-APIRequest", "true")
-                    .method(original.method(), original.body())
-                    .build();
+            Response response;
+            String meetingSession=PreferenceHelper.getSharedPreferenceString(NextcloudTalkApplication.Companion.getSharedApplication().getApplicationContext(),"COOKIE","");
 
-            Response response = chain.proceed(request);
+            if(TextUtils.isEmpty(meetingSession))
+            {
+                Request request = original.newBuilder()
+                        .header("User-Agent", ApiUtils.getUserAgent())
+                        .header("Accept", "application/json")
+                        .header("OCS-APIRequest", "true")
+
+                        .method(original.method(), original.body())
+                        .build();
+
+              response = chain.proceed(request);
 
             if (request.url().encodedPath().contains("/avatar/")) {
                 AvatarStatusCodeHolder.getInstance().setStatusCode(response.code());
             }
+            }
 
+            else {
+                Request request = original.newBuilder()
+                        .header("User-Agent", ApiUtils.getUserAgent())
+                        .header("Accept", "application/json")
+                        .header("OCS-APIRequest", "true")
+                        .header("Cookie","meeting_session="+meetingSession)
+                        .method(original.method(), original.body())
+                        .build();
+
+                response = chain.proceed(request);
+
+                if (request.url().encodedPath().contains("/avatar/")) {
+                    AvatarStatusCodeHolder.getInstance().setStatusCode(response.code());
+                }
+            }
             return response;
         }
     }

@@ -316,7 +316,7 @@ public class ConversationsListController extends BaseController implements Searc
 
         callItems = new ArrayList<>();
 
-        roomsQueryDisposable = ncApi.getRooms(credentials, ApiUtils.getUrlForGetMeetings(currentUser.getBaseUrl()))
+        roomsQueryDisposable = ncApi.getRooms(credentials, ApiUtils.getUrlForGetRooms(currentUser.getBaseUrl()))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(roomsOverall -> {

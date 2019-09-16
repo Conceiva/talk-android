@@ -100,6 +100,7 @@ public class AccountVerificationController extends BaseController {
     private String baseUrl;
     private String username;
     private String token;
+    private String email;
     private boolean isAccountImport;
     private String originalProtocol;
 
@@ -108,6 +109,7 @@ public class AccountVerificationController extends BaseController {
         if (args != null) {
             baseUrl = args.getString(BundleKeys.INSTANCE.getKEY_BASE_URL());
             username = args.getString(BundleKeys.INSTANCE.getKEY_USERNAME());
+            email = args.getString(BundleKeys.INSTANCE.getKEY_EMAIL());
             token = args.getString(BundleKeys.INSTANCE.getKEY_TOKEN());
             if (args.containsKey(BundleKeys.INSTANCE.getKEY_IS_ACCOUNT_IMPORT())) {
                 isAccountImport = true;
@@ -253,8 +255,9 @@ public class AccountVerificationController extends BaseController {
                 });
     }
 
-    private void storeProfile(String displayName, String userId) {
-        userUtils.createOrUpdateUser(username, token,
+    private void storeProfile(String displayName,String email, String userId) {
+
+        userUtils.createOrUpdateUser(username+",,"+email, token,
                 baseUrl, displayName, null, true,
                 userId, null, null,
                 appPreferences.getTemporaryClientCertAlias(), null)
@@ -318,8 +321,10 @@ public class AccountVerificationController extends BaseController {
                                     .getDisplayNameAlt();
                         }
 
+
+
                         if (!TextUtils.isEmpty(displayName)) {
-                            storeProfile(displayName, userProfileOverall.getOcs().getData().getUserId());
+                            storeProfile(displayName,userProfileOverall.getOcs().getData().getEmail(), userProfileOverall.getOcs().getData().getUserId());
                         } else {
                             if (getActivity() != null) {
                                 getActivity().runOnUiThread(() -> progressText.setText(progressText.getText().toString() + "\n" +
@@ -412,7 +417,7 @@ public class AccountVerificationController extends BaseController {
             getActivity().runOnUiThread(() -> {
                 if (userUtils.getUsers().size() == 1) {
                     getRouter().setRoot(RouterTransaction.with(new
-                            ConversationsListController())
+                            MeetingsPagerController())
                             .pushChangeHandler(new HorizontalChangeHandler())
                             .popChangeHandler(new HorizontalChangeHandler()));
                 } else {
