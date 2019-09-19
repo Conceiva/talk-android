@@ -150,7 +150,7 @@ public class ApiUtils {
 
         queryMap.put("u", userEmail);
         if (pin != null && !pin.equalsIgnoreCase("")) {
-            queryMap.put("p", pin);
+            queryMap.put("pin", pin);
         }
 
         retrofitBucket.setQueryMap(queryMap);

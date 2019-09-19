@@ -268,6 +268,7 @@
 
     <!-- Empty states -->
     <string name="nc_conversations_empty">Join a conversation or start a new one\n Say hi to your friends and colleagues!</string>
+    <string name="nc_meetingss_empty">Meetings not available.</string>
     <string name="nc_hello">Hello</string>
 
     <!-- Other -->
@@ -293,7 +294,7 @@
     <string name="nc_webinar">Webinar</string>
     <string name="nc_lobby">Lobby</string>
     <string name="nc_start_time">Start time</string>
-    <string name="nc_lobby_waiting">You are currently waiting in the lobby.</string>
+    <string name="nc_lobby_waiting">You are currently waiting in the lobby.waiting for the host to start the meeting.</string>
     <string name="nc_lobby_waiting_with_date">You are currently waiting in the lobby.\n This
         meeting is scheduled for %1$s.</string>
     <string name="nc_manual">Manual</string>
@@ -315,6 +316,17 @@
     <string name="str_label_repeat_every">Repeat every...</string>
     <string name="str_label_repeat_end">End repeat...</string>
     <string name="str_label_times">Times</string>
+    <string name="str_meeting_ended">Meeting ended.</string>
+    <string name="err_landingpage">Oops! unable to get data to connect meeting session./nPlease try after some time.</string>
+    <string name="err_room_info">Oops! unable to get data to connect meeting session./nPlease try after some time.</string>
+    <string name="url_copied">Meeting URL Copied.</string>
+    <string name="active">Active</string>
+    <string name="str_nodata_scheduled_meeting">Welcome to Spreed online meetings</string>
+    <string name="str_nodata_past_meeting">You have no past meetings</string>
+    <string name="str_scheduled_start">Scheduled start</string>
+    <string name="str_scheduled_end">Scheduled end</string>
+    <string name="str_timezone">Timezone</string>
+    <string name="err_join_room">We are facing issue in joining session for you. Please try after 1 minute.</string>
 
 
 </resources>

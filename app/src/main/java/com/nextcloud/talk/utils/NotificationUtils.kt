@@ -139,7 +139,7 @@ object NotificationUtils {
         return null
     }
 
-    fun cancelExistingNotificationsForRoom(context: Context?, conversationUser: UserEntity,
+    public fun cancelExistingNotificationsForRoom(context: Context?, conversationUser: UserEntity,
                                            roomTokenOrId: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && conversationUser.id != -1L &&
                 context != null) {

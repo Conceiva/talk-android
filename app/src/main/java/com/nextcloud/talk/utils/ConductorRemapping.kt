@@ -25,6 +25,7 @@ import com.bluelinelabs.conductor.Router
 import com.bluelinelabs.conductor.RouterTransaction
 import com.bluelinelabs.conductor.changehandler.HorizontalChangeHandler
 import com.nextcloud.talk.controllers.ChatController
+import com.nextcloud.talk.controllers.ChatControllerSpreed
 
 object ConductorRemapping {
     fun remapChatController(router: Router, internalUserId: Long, roomTokenOrId: String, bundle: Bundle, replaceTop: Boolean) {
@@ -44,11 +45,11 @@ object ConductorRemapping {
             router.setBackstack(backstack, HorizontalChangeHandler())
         } else {
             if (!replaceTop) {
-                router.pushController(RouterTransaction.with(ChatController(bundle))
+                router.pushController(RouterTransaction.with(ChatControllerSpreed(bundle))
                         .pushChangeHandler(HorizontalChangeHandler())
                         .popChangeHandler(HorizontalChangeHandler()).tag(tag))
             } else {
-                router.replaceTopController(RouterTransaction.with(ChatController(bundle))
+                router.replaceTopController(RouterTransaction.with(ChatControllerSpreed(bundle))
                         .pushChangeHandler(HorizontalChangeHandler())
                         .popChangeHandler(HorizontalChangeHandler()).tag(tag))
             }

@@ -96,7 +96,7 @@ public class MeetingsPagerController  extends BaseController {
                 if (!router.hasRootController()) {
 
                 }
-                if(position==0)
+                if(position==1)
                 {
                     router.setRoot(RouterTransaction.with(new PastMeetingsListController())
                             .pushChangeHandler(new VerticalChangeHandler())
@@ -120,7 +120,7 @@ public class MeetingsPagerController  extends BaseController {
             public  CharSequence getPageTitle(int position)
             {
                 String title="";
-                if(position==0)
+                if(position==1)
                 {
                     title="Past Meetings";
                 }
@@ -140,6 +140,8 @@ public class MeetingsPagerController  extends BaseController {
         if (getActionBar() != null) {
             getActionBar().show();
         }
+        /*TabLayout.Tab tab = tabLayout.getTabAt(1);
+        tab.select();*/
     }
     @Override
     protected void onAttach(@NonNull View view) {

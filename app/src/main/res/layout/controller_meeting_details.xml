@@ -58,15 +58,59 @@
                 android:layout_marginTop="@dimen/dp_8"
                 android:text="Meeting Title"></TextView>
 
-            <CheckBox
-                android:id="@+id/meetingTypeCheckBox"
+
+            <RelativeLayout
+                android:id="@+id/copyRelativeLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dp_8"
-                android:text="@string/str_public"
-                android:textColor="@color/white"
-                tools:ignore="MissingPrefix"></CheckBox>
+                android:layout_below="@+id/meetingDescription"
+                android:paddingTop="@dimen/dp_5"
+                android:paddingBottom="@dimen/dp_5"
+                android:layout_gravity="center_vertical"
 
+                >
+                <CheckBox
+                    android:id="@+id/meetingTypeCheckBox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/str_public"
+                    android:textColor="@color/white"
+                    tools:ignore="MissingPrefix"></CheckBox>
+                <ImageView
+                    android:id="@+id/copyImageView"
+                    android:layout_width="@dimen/meeting_icon_height"
+                    android:layout_height="@dimen/meeting_icon_height"
+                    android:layout_gravity="bottom|end"
+                    android:src="@drawable/ic_link"
+                    android:layout_toEndOf="@+id/meetingTypeCheckBox"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="@dimen/dp_10"
+                    />
+
+                <TextView
+                    android:id="@+id/copyTextView"
+                    style="@style/textViewMedium"
+                    android:layout_marginLeft="3dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_toRightOf="@+id/copyImageView"
+                    android:maxWidth="200dp"
+                    android:textColor="@color/white"
+                    android:text=""
+                    android:lines="1"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:layout_centerVertical="true"
+                    />
+                <ImageView
+                    android:id="@+id/copyFileImageView"
+                    android:layout_width="@dimen/meeting_icon_height"
+                    android:layout_height="@dimen/meeting_icon_height"
+                    android:layout_gravity="bottom|end"
+                    android:src="@drawable/ic_copy"
+                    android:layout_toRightOf="@+id/copyTextView"
+                    android:layout_centerVertical="true"
+                    />
+            </RelativeLayout>
             <TextView
                 android:id="@+id/meetingFrequencyTextView"
                 style="@style/textViewMedium"
@@ -130,12 +174,17 @@
                         android:orientation="horizontal"
                         android:padding="@dimen/dp_8">
 
-                        <Spinner
+                        <TextView
+                            android:id="@+id/timeZoneTextView"
+                            style="@style/textViewMedium"
+                            android:layout_width="match_parent"
+                            ></TextView>
+                       <!-- <Spinner
                             android:id="@+id/timeZoneSpinner"
                             style="@style/textViewMedium"
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:text="09/10/2019"></Spinner>
+                            android:text="09/10/2019"></Spinner>-->
                     </LinearLayout>
                 </LinearLayout>
 
@@ -189,12 +238,17 @@
                         android:orientation="horizontal"
                         android:padding="@dimen/dp_8">
 
-                        <Spinner
+                        <TextView
+                            android:id="@+id/timeZoneEndTextView"
+                            style="@style/textViewMedium"
+                            android:layout_width="match_parent"
+                            ></TextView>
+                        <!--<Spinner
                             android:id="@+id/timeZoneEndsSpinner"
                             style="@style/textViewMedium"
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:text="09/10/2019"></Spinner>
+                            android:text="09/10/2019"></Spinner>-->
                     </LinearLayout>
                 </LinearLayout>
 
@@ -209,13 +263,23 @@
                 android:textColor="@color/white"
                 tools:ignore="MissingPrefix"></CheckBox>
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/drawable_light_grey_border"
+                android:layout_marginTop="@dimen/dp_8"
+                android:layout_marginBottom="@dimen/dp_8"
+                >
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/tabLayoutMeetings"
                 style="@style/MyCustomTabLayout"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:layout_marginTop="@dimen/dp_8"
-                app:tabMode="auto"
+                android:layout_marginTop="2dp"
+                android:layout_marginLeft="2dp"
+                android:layout_marginRight="2dp"
+                app:tabMode="fixed"
                 app:tabRippleColor="@null"
                 app:tabSelectedTextColor="@color/colorPrimary"
                 app:tabBackground="@drawable/tab_color_selector"
@@ -226,8 +290,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/drawable_light_grey_border"
-                android:layout_marginBottom="@dimen/dp_8"
                 />
+            </LinearLayout>
 <View
     android:layout_width="match_parent"
     android:layout_height="15dp"

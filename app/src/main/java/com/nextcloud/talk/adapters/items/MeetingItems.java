@@ -20,11 +20,9 @@
 
 package com.nextcloud.talk.adapters.items;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -32,35 +30,20 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import androidx.emoji.widget.EmojiTextView;
-
-import com.amulyakhare.textdrawable.TextDrawable;
-import com.facebook.drawee.backends.pipeline.Fresco;
-import com.facebook.drawee.interfaces.DraweeController;
-import com.facebook.drawee.view.SimpleDraweeView;
 import com.nextcloud.talk.R;
 import com.nextcloud.talk.application.NextcloudTalkApplication;
-
-import com.nextcloud.talk.events.MeetingApiCallEvent;
 import com.nextcloud.talk.events.MeetingItemClickEvent;
 import com.nextcloud.talk.events.MeetingItemJoinMeetingClickEvent;
 import com.nextcloud.talk.models.database.UserEntity;
-import com.nextcloud.talk.models.json.chat.ChatMessage;
-import com.nextcloud.talk.models.json.conversations.Conversation;
 import com.nextcloud.talk.models.json.meetings.MeetingsReponse;
-import com.nextcloud.talk.utils.ApiUtils;
 import com.nextcloud.talk.utils.DateUtils;
-import com.nextcloud.talk.utils.DisplayUtils;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
-import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.Property;
-import net.fortuna.ical4j.model.PropertyList;
 import net.fortuna.ical4j.model.component.VEvent;
-import net.fortuna.ical4j.model.component.VTimeZone;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -77,10 +60,6 @@ import eu.davidea.flexibleadapter.items.IFilterable;
 import eu.davidea.flexibleadapter.items.IFlexible;
 import eu.davidea.flexibleadapter.utils.FlexibleUtils;
 import eu.davidea.viewholders.FlexibleViewHolder;
-
-import static com.nextcloud.talk.models.json.conversations.Conversation.ConversationType.ROOM_GROUP_CALL;
-import static com.nextcloud.talk.models.json.conversations.Conversation.ConversationType.ROOM_PUBLIC_CALL;
-import static com.nextcloud.talk.models.json.conversations.Conversation.ConversationType.ROOM_TYPE_ONE_TO_ONE_CALL;
 
 public class MeetingItems extends AbstractFlexibleItem<MeetingItems.ConversationItemViewHolder> implements
         IFilterable<String> {
@@ -137,7 +116,6 @@ public class MeetingItems extends AbstractFlexibleItem<MeetingItems.Conversation
         }
 
 
-
         if (meeting.isOwner()) {
             holder.meetingHostLinearLayout.setVisibility(View.VISIBLE);
             holder.meetingHostTextView.setText("Host");
@@ -145,56 +123,60 @@ public class MeetingItems extends AbstractFlexibleItem<MeetingItems.Conversation
             holder.meetingHostLinearLayout.setVisibility(View.GONE);
         }
 
-        holder.meetingDateTextView.setText(DateUtils.INSTANCE.getDateTimeStringFromTimestamp(meeting.getStart(),"dd MMMM yyyy",""));
-        holder.meetingTimeTextView.setText(DateUtils.INSTANCE.getDateTimeStringFromTimestamp(meeting.getStart(),"HH:mm",""));
+        holder.meetingDateTextView.setText(DateUtils.INSTANCE.getDateTimeStringFromTimestamp(meeting.getStart(), "dd MMMM yyyy", ""));
+        holder.meetingTimeTextView.setText(DateUtils.INSTANCE.getDateTimeStringFromTimestamp(meeting.getStart(), "HH:mm", ""));
 
-        if(meeting.isJsonMemberPublic())
-        {
+        if (meeting.isJsonMemberPublic()) {
             holder.meetingType.setText(context.getString(R.string.str_public));
-        }
-        else {
+        } else {
             holder.meetingType.setText(context.getString(R.string.str_private));
         }
 
-        if(meeting.getDescription().isEmpty())
-        {
+        if (meeting.getDescription().isEmpty()) {
             holder.meetingDescription.setVisibility(View.GONE);
-        }
-        else {
+        } else {
             holder.meetingDescription.setVisibility(View.VISIBLE);
             holder.meetingDescription.setText(meeting.getDescription());
 
         }
         holder.meetingFrequencyTextView.setVisibility(View.GONE);
 
-        holder.meetingID.setText(context.getResources().getString(R.string.str_meeting_id)+" "+meeting.getMeetingid());
+        holder.meetingID.setText(context.getResources().getString(R.string.str_meeting_id) + " " + meeting.getMeetingid());
 
 
         StringReader sin = new StringReader(meeting.getVcalendar());
 
         CalendarBuilder builder = new CalendarBuilder();
         Calendar cal = null;
+        String meetingURL = "";
+        Property propertyMeetingURL = null;
         try {
             cal = builder.build(sin);
             VEvent component = (VEvent) cal.getComponents().getComponent("VEVENT");
+            propertyMeetingURL = component.getProperties().getProperty("URL");
             Property rrule = component.getProperties().getProperty("RRULE");
-            if(rrule!=null) {
+            if (rrule != null) {
                 String rule = rrule.getValue().toString();
-                String startingOn = " Starting on "+DateUtils.INSTANCE.getDateTimeStringFromTimestamp(meeting.getStart(), "dd MMMM yyyy HH:mm", meeting.getTimezone());
+                String startingOn = " Starting on " + DateUtils.INSTANCE.getDateTimeStringFromTimestamp(meeting.getStart(), "dd MMMM yyyy HH:mm", meeting.getTimezone());
                 if (getTextForFrequency(rule).equalsIgnoreCase("")) {
                     holder.meetingFrequencyTextView.setVisibility(View.GONE);
                 } else {
                     holder.meetingFrequencyTextView.setVisibility(View.VISIBLE);
                     holder.meetingFrequencyTextView.setText(getTextForFrequency(rule) + " " + startingOn);
                 }
-            }
-            else {
+            } else {
                 holder.meetingFrequencyTextView.setVisibility(View.GONE);
             }
+            if (propertyMeetingURL != null)
+                meetingURL = propertyMeetingURL.getValue();
             //FREQ=YEARLY;BYMONTH=4;BYDAY=1SU
         } catch (IOException e) {
+            if (propertyMeetingURL != null)
+                meetingURL = propertyMeetingURL.getValue();
             Log.d("calendar", "io exception" + e.getLocalizedMessage());
-        } catch (ParserException e) {
+        } catch (Exception e) {
+            if (propertyMeetingURL != null)
+                meetingURL = propertyMeetingURL.getValue();
             Log.d("calendar", "parser exception" + e.getLocalizedMessage());
         }
 
@@ -211,10 +193,35 @@ public class MeetingItems extends AbstractFlexibleItem<MeetingItems.Conversation
             }
         });
 
+        if (meeting.isJsonMemberPublic()) {
+            meetingURL = meeting.getServerUrl() + "jc/" + meeting.getMeetingid();
+            holder.copyRelativeLayout.setVisibility(View.VISIBLE);
+            holder.copyTextView.setText(meetingURL);
+        } else {
+            holder.copyRelativeLayout.setVisibility(View.GONE);
+        }
+        if(meeting.isActive())
+        {
+            holder.activeLinearLayout.setVisibility(View.VISIBLE);
+        }
+        else {
+            holder.activeLinearLayout.setVisibility(View.GONE);
+        }
+
+        holder.copyRelativeLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText("Meeting Link", holder.copyTextView.getText().toString());
+                clipboard.setPrimaryClip(clip);
+                Toast.makeText(context, context.getResources().getString(R.string.url_copied), Toast.LENGTH_LONG).show();
+            }
+        });
+
+
     }
 
-    private String getTextForFrequency(String rule)
-    {
+    private String getTextForFrequency(String rule) {
         String[] splitted = rule.split(";");
         String frequency = "", interval = "";
 
@@ -303,6 +310,16 @@ public class MeetingItems extends AbstractFlexibleItem<MeetingItems.Conversation
         Button viewDetailsButton;
         @BindView(R.id.joinMeetingButton)
         Button joinMeetingButton;
+        @BindView(R.id.copyImageView)
+        ImageView copyImageView;
+        @BindView(R.id.copyTextView)
+        TextView copyTextView;
+        @BindView(R.id.copyFileImageView)
+        ImageView copyFileImageView;
+        @BindView(R.id.copyRelativeLayout)
+        RelativeLayout copyRelativeLayout;
+        @BindView(R.id.activeLinearLayout)
+        LinearLayout activeLinearLayout;
         ConversationItemViewHolder(View view, FlexibleAdapter adapter) {
             super(view, adapter);
             ButterKnife.bind(this, view);

@@ -105,15 +105,17 @@ public interface NcApi {
         Server URL is: baseUrl + ocsApiVersion + spreedApiVersion + /room
      */
 
-    /*@POST
-    @Headers("Cache-Control: no-cache")
-    Observable<LandingPageResponse> getLandingPage(@Header("Authorization") String authorization, @Url String url,
-                                              @QueryMap Map<String, String> options);*/
-    @FormUrlEncoded
+    @POST
+    Observable<LandingPageResponse> getLandingPage(@Url String url,
+                                                   @QueryMap Map<String, String> options);
+
+    @POST
+    Observable<LandingPageResponse> getLandingPagePrivate(@Header("requesttoken") String authorization,@Url String url);
+    /*@FormUrlEncoded
     @POST
     Observable<LandingPageResponse> getLandingPage(@Url String url,
                                                    @Nullable @Field("u") String email,@Nullable @Field("p") String pin);
-
+*/
     /*
         QueryMap items are as follows:
             - "roomName" : "newName"
@@ -166,10 +168,16 @@ public interface NcApi {
     @GET
     Observable<ParticipantsOverall> getPeersForCall(@Header("Authorization") String authorization, @Url String url);
 
+
+
     @FormUrlEncoded
     @POST
-    Observable<CallOverall> joinRoom(@Nullable @Header("Authorization") String authorization, @Url String url,
+    Observable<CallOverall> joinRoom(@Header("Authorization") String authorization, @Url String url,
                                      @Nullable @Field("password") String password);
+
+    @FormUrlEncoded
+    @POST
+    Observable<CallOverall> joinRoomNew(@Header("Authorization") String authorization,@Header("Cookie") String meetingsesion, @Url String url, @Nullable @Field("password") String password);
 
     @DELETE
     Observable<GenericOverall> leaveRoom(@Nullable @Header("Authorization") String authorization, @Url String url);

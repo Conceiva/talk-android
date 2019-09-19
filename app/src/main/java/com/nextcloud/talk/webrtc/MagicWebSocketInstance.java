@@ -29,6 +29,7 @@ import com.nextcloud.talk.R;
 import com.nextcloud.talk.application.NextcloudTalkApplication;
 import com.nextcloud.talk.events.NetworkEvent;
 import com.nextcloud.talk.events.WebSocketCommunicationEvent;
+import com.nextcloud.talk.events.WebSocketMessageEvent;
 import com.nextcloud.talk.models.database.UserEntity;
 import com.nextcloud.talk.models.json.participants.Participant;
 import com.nextcloud.talk.models.json.signaling.NCMessageWrapper;
@@ -222,7 +223,14 @@ public class MagicWebSocketInstance extends WebSocketListener {
                                                             refreshChatHashMap.put(BundleKeys.INSTANCE.getKEY_INTERNAL_USER_ID(), Long.toString(conversationUser.getId()));
                                                             eventBus.post(new WebSocketCommunicationEvent("refreshChat", refreshChatHashMap));
                                                         }
+                                                    }else if(chatMap.containsKey("comment"))
+                                                    {
+                                                            HashMap<String, String> refreshMessageHashMap = new HashMap<>();
+                                                           refreshMessageHashMap.put(BundleKeys.INSTANCE.getKEY_ROOM_TOKEN(), (String) messageHashMap.get("message"));
+                                                           refreshMessageHashMap.put(BundleKeys.INSTANCE.getKEY_INTERNAL_USER_ID(), Long.toString(conversationUser.getId()));
+                                                            eventBus.post(new WebSocketMessageEvent("comment", chatMap));
                                                     }
+
                                             }
                                         }
                                     } else if (eventOverallWebSocketMessage.getEventMap().get("type").equals("join")) {

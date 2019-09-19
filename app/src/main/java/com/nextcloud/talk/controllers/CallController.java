@@ -2190,7 +2190,7 @@ public class CallController extends BaseController {
     }
 
     private void playCallingSound() {
-        stopCallingSound();
+       /* stopCallingSound();
         Uri ringtoneUri = Uri.parse("android.resource://" + getApplicationContext().getPackageName() + "/raw/librem_by_feandesign_call");
         if (getActivity() != null) {
             mediaPlayer = new MediaPlayer();
@@ -2208,7 +2208,7 @@ public class CallController extends BaseController {
             } catch (IOException e) {
                 Log.e(TAG, "Failed to play sound");
             }
-        }
+        }*/
     }
 
     private void stopCallingSound() {

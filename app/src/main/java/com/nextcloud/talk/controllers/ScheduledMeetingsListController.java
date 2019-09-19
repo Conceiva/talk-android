@@ -37,6 +37,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -102,6 +103,7 @@ import org.parceler.Parcels;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -151,6 +153,9 @@ public class ScheduledMeetingsListController extends BaseController implements S
     @BindView(R.id.progressBar)
     ProgressBar progressBarView;
 
+    @BindView(R.id.sendHiTextView)
+    TextView sendHiTextView;
+
     @BindView(R.id.emptyLayout)
     RelativeLayout emptyLayoutView;
 
@@ -191,7 +196,7 @@ public class ScheduledMeetingsListController extends BaseController implements S
 
     @Override
     protected View inflateView(@NonNull LayoutInflater inflater, @NonNull ViewGroup container) {
-        return inflater.inflate(R.layout.controller_conversations_rv, container, false);
+        return inflater.inflate(R.layout.controller_meetings_rv, container, false);
     }
 
     @Override
@@ -259,7 +264,7 @@ public class ScheduledMeetingsListController extends BaseController implements S
             shouldUseLastMessageLayout = currentUser.hasSpreedFeatureCapability("last-room-activity");
 
         }
-        progressBarView.setVisibility(View.GONE);
+
     }
 
     @Override
@@ -330,7 +335,12 @@ public class ScheduledMeetingsListController extends BaseController implements S
     public void onMeetingListAPIRespone(MeetingApiCallEvent event) {
         /* Do something */
         List<MeetingsReponse> meetingsReponses=event.getResponse();
-
+        Collections.sort(meetingsReponses, new Comparator<MeetingsReponse>() {
+            @Override
+            public int compare(MeetingsReponse meetingsReponse, MeetingsReponse t1) {
+                return Integer.valueOf(meetingsReponse.getStart()).compareTo(t1.getStart()) ;
+            }
+        });
             if (adapterWasNull) {
                 adapterWasNull = false;
 
@@ -345,14 +355,13 @@ public class ScheduledMeetingsListController extends BaseController implements S
                     swipeRefreshLayout.setVisibility(View.VISIBLE);
                 }
             } else {
-                if (emptyLayoutView.getVisibility() != View.VISIBLE) {
+               /* if (emptyLayoutView.getVisibility() != View.VISIBLE) {*/
                     emptyLayoutView.setVisibility(View.VISIBLE);
-                }
+//                }
 
-                if (swipeRefreshLayout.getVisibility() != View.GONE) {
                     swipeRefreshLayout.setVisibility(View.GONE);
-                }
             }
+
 
             MeetingsReponse meeting;
             callItems.clear();
@@ -380,6 +389,7 @@ public class ScheduledMeetingsListController extends BaseController implements S
 
 
         isRefreshing = false;
+
     }
 
     private void prepareViews() {
@@ -392,7 +402,7 @@ public class ScheduledMeetingsListController extends BaseController implements S
 
         swipeRefreshLayout.setOnRefreshListener(() -> eventBus.post(new MeetingApiRefreshEvent(true)));
         swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
-
+        sendHiTextView.setText(context.getResources().getString(R.string.str_nodata_scheduled_meeting));
 //        emptyLayoutView.setOnClickListener(v -> );
         /*floatingActionButton.setOnClickListener(v -> {
             showNewConversationsScreen();

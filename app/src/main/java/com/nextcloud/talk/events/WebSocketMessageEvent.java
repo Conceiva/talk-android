@@ -21,15 +21,17 @@
 package com.nextcloud.talk.events;
 
 import androidx.annotation.Nullable;
-import lombok.Data;
 
 import java.util.HashMap;
+import java.util.Map;
+
+import lombok.Data;
 
 @Data
-public class WebSocketCommunicationEvent {
+public class WebSocketMessageEvent {
     public final String type;
-    @Nullable
-    public final HashMap<String, String> hashMap;
 
+    @Nullable
+    public final Map<String, Object> messageHashMap;
 
 }

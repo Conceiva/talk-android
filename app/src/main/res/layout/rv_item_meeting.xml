@@ -61,7 +61,7 @@
             android:id="@+id/meetingType"
             android:layout_alignParentEnd="true"
             android:layout_marginStart="8dp"
-            style="@style/textViewMedium"
+            style="@style/textViewBig"
             tools:text="Private" />
 
         <TextView
@@ -70,6 +70,35 @@
             android:layout_below="@+id/meetingTitle"
             android:layout_alignParentStart="true"
             tools:text="Private" />
+        <LinearLayout
+            android:id="@+id/activeLinearLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_below="@+id/meetingType"
+            android:orientation="horizontal"
+            android:gravity="right"
+            android:layout_marginLeft="@dimen/dp_16"
+            android:visibility="gone"
+            >
+
+            <ImageView
+                android:id="@+id/meetingActiveImageView"
+                android:layout_width="@dimen/meeting_icon_height"
+                android:layout_height="@dimen/meeting_icon_height"
+                android:layout_gravity="bottom|end"
+                android:src="@drawable/ic_active_user"
+                />
+
+            <TextView
+                android:id="@+id/meetingActiveTextView"
+                style="@style/textViewMedium"
+                android:text="@string/active"
+                android:layout_marginLeft="@dimen/dp_5"
+                android:layout_gravity="center_vertical"
+                />
+
+        </LinearLayout>
 
     </RelativeLayout>
 
@@ -169,14 +198,55 @@
             style="@style/textViewMedium"
             android:text="Every Week starting on monday"
             android:layout_marginTop="@dimen/dp_10"
+            android:paddingBottom="@dimen/dp_5"
             android:layout_below="@+id/meetingFrequencyTextView"
             />
+
+        <RelativeLayout
+            android:id="@+id/copyRelativeLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/meetingDescription"
+            android:paddingTop="@dimen/dp_5"
+            android:paddingBottom="@dimen/dp_10"
+            >
+            <ImageView
+                android:id="@+id/copyImageView"
+                android:layout_width="@dimen/meeting_icon_height"
+                android:layout_height="@dimen/meeting_icon_height"
+                android:layout_gravity="bottom|end"
+                android:src="@drawable/ic_link"
+                android:layout_alignParentStart="true"
+                />
+
+            <TextView
+                android:id="@+id/copyTextView"
+                style="@style/textViewMedium"
+                android:layout_marginLeft="3dp"
+                android:layout_gravity="center_vertical"
+                android:layout_toRightOf="@+id/copyImageView"
+                android:maxWidth="200dp"
+                android:textColor="@color/white"
+                android:text=""
+                android:lines="1"
+                android:ellipsize="end"
+                android:singleLine="true"
+                />
+            <ImageView
+                android:id="@+id/copyFileImageView"
+                android:layout_width="@dimen/meeting_icon_height"
+                android:layout_height="@dimen/meeting_icon_height"
+                android:layout_gravity="bottom|end"
+                android:src="@drawable/ic_copy"
+                android:layout_toRightOf="@+id/copyTextView"
+                />
+        </RelativeLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_below="@+id/meetingDescription"
+            android:layout_below="@+id/copyRelativeLayout"
             android:layout_marginTop="@dimen/dp_10"
             >
             <Button

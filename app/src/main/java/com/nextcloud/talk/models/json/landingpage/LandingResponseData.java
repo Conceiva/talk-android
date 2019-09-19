@@ -3,97 +3,104 @@ package com.nextcloud.talk.models.json.landingpage;
 import com.bluelinelabs.logansquare.annotation.JsonField;
 import com.bluelinelabs.logansquare.annotation.JsonObject;
 
+import org.parceler.Parcel;
+
+import lombok.Data;
+
+@Data
+@Parcel
 @JsonObject
-public class Data{
+public class LandingResponseData {
 
 	@JsonField(name ="macosdownload")
-	 String macosdownload;
+	public String macosdownload;
 
 	@JsonField(name ="host_country")
-	 String hostCountry;
+	public  String hostCountry;
 
 	@JsonField(name ="auth")
-	 boolean auth;
+	public  boolean auth;
 
 	@JsonField(name ="windowsdownload")
-	 String windowsdownload;
+	public  String windowsdownload;
 
 	@JsonField(name ="moderator")
-	 boolean moderator;
+	public boolean moderator;
 
 	@JsonField(name ="description")
-	 String description;
+	public  String description;
 
 	@JsonField(name ="shareid")
-	 String shareid;
+	public String shareid;
 
 	@JsonField(name ="title")
-	 String title;
+	public String title;
 
 	@JsonField(name ="uuid")
-	 String uuid;
+	public String uuid;
 
 	@JsonField(name ="found")
-	 boolean found;
+	public boolean found;
 
 	@JsonField(name ="protected")
-	 boolean jsonMemberProtected;
+	public boolean jsonMemberProtected;
 
 	@JsonField(name ="usingCookie")
-	 boolean usingCookie;
+	public boolean usingCookie;
 
 	@JsonField(name ="public_meeting")
-	 boolean publicMeeting;
+	public boolean publicMeeting;
 
 	@JsonField(name ="now")
-	 int now;
+	public int now;
 
 	/*@JsonField(name ="dialin_nrs")
 	 List<DialinNrsItem> dialinNrs;*/
 
 	@JsonField(name ="end")
-	 int end;
+	public  int end;
 
 	@JsonField(name ="id")
-	 String id;
+	public String id;
 
 	@JsonField(name ="linuxdownload")
-	 String linuxdownload;
+	public  String linuxdownload;
 
 	@JsonField(name ="start")
-	 int start;
+	public  int start;
 
 	@JsonField(name ="started")
-	 boolean started;
+	public  boolean started;
 
 	/*@JsonField(name ="onlyofficeFmts")
 	 OnlyofficeFmts onlyofficeFmts;*/
 
 	@JsonField(name ="display_name")
-	 String displayName;
+	public  String displayName;
 
 
 	@JsonField(name ="user_is_host")
-	 boolean userIsHost;
+	public boolean userIsHost;
 
 	@JsonField(name ="p")
-	 Object P;
+	public String P;
 
 	@JsonField(name ="meeting_session")
 	public String meetingSession;
 
+
 	@JsonField(name ="host_session")
-	 String hostSession;
+	 public String hostSession;
 
 	@JsonField(name ="allday")
-	 boolean allday;
+	public boolean allday;
 
 	@JsonField(name ="u")
-	 String U;
+	public String U;
 
 	@JsonField(name ="ended")
-	 boolean ended;
+	public  boolean ended;
 
 	@JsonField(name ="scheduled_now")
-	 boolean scheduledNow;
+	public boolean scheduledNow;
 }

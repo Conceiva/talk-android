@@ -30,6 +30,7 @@ import com.nextcloud.talk.BuildConfig;
 import com.nextcloud.talk.R;
 import com.nextcloud.talk.api.NcApi;
 import com.nextcloud.talk.application.NextcloudTalkApplication;
+import com.nextcloud.talk.receivers.CustomCookieJar;
 import com.nextcloud.talk.utils.ApiUtils;
 import com.nextcloud.talk.utils.LoggingUtils;
 import com.nextcloud.talk.utils.PreferenceHelper;
@@ -43,6 +44,8 @@ import dagger.Module;
 import dagger.Provides;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.*;
+import okhttp3.internal.http.HttpDate;
+import okhttp3.internal.platform.Platform;
 import okhttp3.internal.tls.OkHostnameVerifier;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
@@ -53,6 +56,8 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.X509KeyManager;
 import java.io.IOException;
 import java.net.CookieManager;
+import java.net.CookiePolicy;
+import java.net.HttpCookie;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.security.KeyStore;
@@ -60,14 +65,23 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import static okhttp3.internal.Util.delimiterOffset;
+import static okhttp3.internal.Util.trimSubstring;
+import static okhttp3.internal.platform.Platform.WARN;
 
 @Module(includes = DatabaseModule.class)
 public class RestModule {
 
     private static final String TAG = "RestModule";
     private final Context context;
-
+     List<Cookie> cookiesList=new ArrayList<>();
     public RestModule(Context context) {
         this.context = context;
     }
@@ -152,6 +166,10 @@ public class RestModule {
     @Singleton
     @Provides
     CookieManager provideCookieManager() {
+        CookieManager cookieManager=new CookieManager();
+
+
+
         return new CookieManager();
     }
 
@@ -180,13 +198,133 @@ public class RestModule {
                                    CookieManager cookieManager, Dispatcher dispatcher) {
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 
+//        cookieManager=setupCookieManager(cookieManager);
+        cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
         httpClient.retryOnConnectionFailure(true);
         httpClient.connectTimeout(45, TimeUnit.SECONDS);
         httpClient.readTimeout(45, TimeUnit.SECONDS);
         httpClient.writeTimeout(45, TimeUnit.SECONDS);
+       /* CookieJar cookieJar=new CookieJar() {
+            @Override
+            public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
 
-        httpClient.cookieJar(new JavaNetCookieJar(cookieManager));
-//        httpClient.cache(null);
+                for(int i=0;i<cookies.size();i++)
+                {
+                    Cookie cookie=cookies.get(i);
+                    boolean add=false;
+                    for(int j=0;j<cookiesList.size();j++)
+                    {
+                        Cookie cookie1=cookiesList.get(j);
+                        if (cookie.name().equalsIgnoreCase(cookie1.name()))
+                        {
+                            cookiesList.remove(j);
+                            add=true;
+                        }
+                    }
+
+                       cookiesList.add(cookie);
+
+                }
+            }
+
+            @Override
+            public List<Cookie> loadForRequest(HttpUrl url) {
+                if (cookiesList != null) {
+                    String meetingSession=PreferenceHelper.getSharedPreferenceString(NextcloudTalkApplication.Companion.getSharedApplication().getApplicationContext(),"MEETING","");
+                    Cookie cookie= new Cookie.Builder()
+                            .domain("raijinspreed.ddns.net")
+                            .path("/")
+                            .httpOnly()
+                            .name("meeting_session")
+                            .value(meetingSession)
+                            .secure()
+                            .build();
+                    boolean add=false;
+                    for(int i=0;i<cookiesList.size();i++)
+                    {
+                        Cookie cookie1=cookiesList.get(i);
+                       if(cookie1.name().equalsIgnoreCase("meeting_session")||cookie1.name().equalsIgnoreCase("host_session"))
+                       {
+                           cookiesList.remove(i);
+                       }
+                    }
+                    cookiesList.add(cookie);
+
+                    return cookiesList;
+                }
+                return Collections.emptyList();
+            }
+        };
+*/
+        /*CookieJar cookieJar=new CookieJar() {
+            @Override
+            public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
+
+                if (cookieManager != null) {
+                    List<String> cookieStrings = new ArrayList<>();
+                    for (Cookie cookie : cookies) {
+                        cookieStrings.add(cookie.toString());
+                    }
+                    Map<String, List<String>> multimap = Collections.singletonMap("Set-Cookie", cookieStrings);
+                    try {
+                        cookieManager.put(url.uri(), multimap);
+                    } catch (IOException e) {
+                        Platform.get().log(WARN, "Saving cookies failed for " + url.resolve("/..."), e);
+                    }
+                }
+            }
+
+            @Override
+            public List<Cookie> loadForRequest(HttpUrl url) {
+                Map<String, List<String>> headers = Collections.emptyMap();
+                Map<String, List<String>> cookieHeaders;
+                try {
+                    cookieHeaders = cookieManager.get(url.uri(), headers);
+                } catch (IOException e) {
+                    Platform.get().log(WARN, "Loading cookies failed for " + url.resolve("/..."), e);
+                    return Collections.emptyList();
+                }
+
+                List<Cookie> cookies = null;
+                for (Map.Entry<String, List<String>> entry : cookieHeaders.entrySet()) {
+                    String key = entry.getKey();
+                    if (("Cookie".equalsIgnoreCase(key) || "Cookie2".equalsIgnoreCase(key))
+                            && !entry.getValue().isEmpty()) {
+                        for (String header : entry.getValue()) {
+                            if (cookies == null) cookies = new ArrayList<>();
+                            cookies.addAll(decodeHeaderAsJavaNetCookies(url, header));
+                        }
+                    }
+                }
+                if(cookies!=null&&cookies.size()>0) {
+                    String meetingSession = PreferenceHelper.getSharedPreferenceString(NextcloudTalkApplication.Companion.getSharedApplication().getApplicationContext(), "MEETING", "");
+                    Cookie cookie = new Cookie.Builder()
+                            .domain("raijinspreed.ddns.net")
+                            .path("/")
+                            .httpOnly()
+                            .name("meeting_session")
+                            .value(meetingSession)
+                            .secure()
+                            .build();
+                    boolean add = false;
+                    for (int i = 0; i < cookies.size(); i++) {
+                        Cookie cookie1 = cookies.get(i);
+                        if (cookie1.name().equalsIgnoreCase("meeting_session") || cookie1.name().equalsIgnoreCase("host_session")) {
+                            cookies.remove(i);
+                        }
+                    }
+                    cookies.add(cookie);
+                }
+                return cookies != null
+                        ? Collections.unmodifiableList(cookies)
+                        : Collections.emptyList();
+            }
+
+        };*/
+        httpClient.cookieJar(new CustomCookieJar(cookieManager));
+
+//      httpClient.cookieJar(new JavaNetCookieJar(cookieManager));
+//      httpClient.cache(null);
         httpClient.cache(cache);
         // Trust own CA and all self-signed certs
         httpClient.sslSocketFactory(sslSocketFactoryCompat, magicTrustManager);
@@ -228,6 +366,13 @@ public class RestModule {
         return httpClient.build();
     }
 
+    private CookieManager setupCookieManager(CookieManager cookieManager)
+    {
+        cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
+
+        return cookieManager;
+    }
+
     public static class HeadersInterceptor implements Interceptor {
 
         @NonNull
@@ -235,18 +380,17 @@ public class RestModule {
         public Response intercept(@NonNull Chain chain) throws IOException {
             Request original = chain.request();
             Response response;
-            String meetingSession=PreferenceHelper.getSharedPreferenceString(NextcloudTalkApplication.Companion.getSharedApplication().getApplicationContext(),"COOKIE","");
-
-            if(TextUtils.isEmpty(meetingSession))
+            String meetingSession=PreferenceHelper.getSharedPreferenceString(NextcloudTalkApplication.Companion.getSharedApplication().getApplicationContext(),"MEETING","");
+            String hostSession=PreferenceHelper.getSharedPreferenceString(NextcloudTalkApplication.Companion.getSharedApplication().getApplicationContext(),"HOST","");
+            if(!TextUtils.isEmpty(hostSession))
             {
                 Request request = original.newBuilder()
                         .header("User-Agent", ApiUtils.getUserAgent())
                         .header("Accept", "application/json")
                         .header("OCS-APIRequest", "true")
-
+                        .header("Cookie","host_session="+hostSession)
                         .method(original.method(), original.body())
                         .build();
-
               response = chain.proceed(request);
 
             if (request.url().encodedPath().contains("/avatar/")) {
@@ -254,12 +398,29 @@ public class RestModule {
             }
             }
 
-            else {
+            else if(!TextUtils.isEmpty(meetingSession))
+            {
                 Request request = original.newBuilder()
                         .header("User-Agent", ApiUtils.getUserAgent())
                         .header("Accept", "application/json")
                         .header("OCS-APIRequest", "true")
                         .header("Cookie","meeting_session="+meetingSession)
+                        .method(original.method(), original.body())
+
+                        .build();
+
+                response = chain.proceed(request);
+
+                if (request.url().encodedPath().contains("/avatar/")) {
+                    AvatarStatusCodeHolder.getInstance().setStatusCode(response.code());
+                }
+            }
+            else
+            {
+                Request request = original.newBuilder()
+                        .header("User-Agent", ApiUtils.getUserAgent())
+                        .header("Accept", "application/json")
+                        .header("OCS-APIRequest", "true")
                         .method(original.method(), original.body())
                         .build();
 
@@ -269,9 +430,12 @@ public class RestModule {
                     AvatarStatusCodeHolder.getInstance().setStatusCode(response.code());
                 }
             }
+
             return response;
         }
     }
+
+
 
     public static class MagicAuthenticator implements Authenticator {
 
@@ -332,4 +496,40 @@ public class RestModule {
             return proxy;
         }
     }
+
+
+
+    /**
+     * Convert a request header to OkHttp's cookies via {@link HttpCookie}. That extra step handles
+     * multiple cookies in a single request header, which {@link Cookie#parse} doesn't support.
+     */
+    private List<Cookie> decodeHeaderAsJavaNetCookies(HttpUrl url, String header) {
+        List<Cookie> result = new ArrayList<>();
+        for (int pos = 0, limit = header.length(), pairEnd; pos < limit; pos = pairEnd + 1) {
+            pairEnd = delimiterOffset(header, pos, limit, ";,");
+            int equalsSign = delimiterOffset(header, pos, pairEnd, '=');
+            String name = trimSubstring(header, pos, equalsSign);
+            if (name.startsWith("$")) continue;
+
+            // We have either name=value or just a name.
+            String value = equalsSign < pairEnd
+                    ? trimSubstring(header, equalsSign + 1, pairEnd)
+                    : "";
+
+            // If the value is "quoted", drop the quotes.
+            if (value.startsWith("\"") && value.endsWith("\"")) {
+                value = value.substring(1, value.length() - 1);
+            }
+
+            result.add(new Cookie.Builder()
+                    .name(name)
+                    .value(value)
+                    .domain(url.host())
+                    .build());
+        }
+        return result;
+    }
+
+
+
 }

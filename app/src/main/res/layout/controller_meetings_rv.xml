@@ -58,7 +58,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/noConversationsImageView"
             android:layout_margin="8dp"
-            android:text="@string/nc_conversations_empty"
+            android:text="@string/nc_meetingss_empty"
             android:textAlignment="center"
             android:textSize="20sp" />
     </RelativeLayout>

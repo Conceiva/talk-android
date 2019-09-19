@@ -4,8 +4,14 @@ import javax.annotation.Generated;
 import com.bluelinelabs.logansquare.annotation.JsonField;
 import com.bluelinelabs.logansquare.annotation.JsonObject;
 
+import org.parceler.Parcel;
+
+import lombok.Data;
+
 @Generated("com.robohorse.robopojogenerator")
 @JsonObject
+@Parcel
+@Data
 public class Meta{
 
 	@JsonField(name ="statuscode")

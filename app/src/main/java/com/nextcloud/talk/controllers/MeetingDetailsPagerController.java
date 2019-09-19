@@ -20,6 +20,9 @@
 
 package com.nextcloud.talk.controllers;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
@@ -31,8 +34,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.graphics.drawable.RoundedBitmapDrawable;
@@ -123,16 +129,32 @@ public class MeetingDetailsPagerController extends BaseController {
     @BindView(R.id.meetingEndsTimeTextView)
     TextView meetingEndsTimeTextView;
 
-    @BindView(R.id.timeZoneSpinner)
+    /*@BindView(R.id.timeZoneSpinner)
     Spinner timeZoneSpinner;
 
     @BindView(R.id.timeZoneEndsSpinner)
-    Spinner timeZoneEndsSpinner;
+    Spinner timeZoneEndsSpinner;*/
+
+    @BindView(R.id.timeZoneTextView)
+    TextView timeZoneTextView;
+
+    @BindView(R.id.timeZoneEndTextView)
+    TextView timeZoneEndTextView;
 
     @BindView(R.id.allDayEventCheckBox)
     CheckBox allDayEventCheckBox;
 
+    @BindView(R.id.copyImageView)
+    ImageView copyImageView;
 
+    @BindView(R.id.copyTextView)
+    TextView copyTextView;
+
+    @BindView(R.id.copyFileImageView)
+    ImageView copyFileImageView;
+
+    @BindView(R.id.copyRelativeLayout)
+    RelativeLayout copyRelativeLayout;
     private UserEntity currentUser;
 
     private RouterPagerAdapter pagerAdapter;
@@ -175,7 +197,7 @@ public class MeetingDetailsPagerController extends BaseController {
 
             @Override
             public int getCount() {
-                return 4;
+                return 2;
             }
 
             @Override
@@ -221,9 +243,32 @@ public class MeetingDetailsPagerController extends BaseController {
 
         meetingEndsDateTextView.setText(DateUtils.INSTANCE.getDateTimeStringFromTimestamp(meetingsReponse.getEnd(), "MM/dd/yyyy", meetingsReponse.getTimezone()));
         meetingEndsTimeTextView.setText(DateUtils.INSTANCE.getDateTimeStringFromTimestamp(meetingsReponse.getEnd(), "hh:mm a", meetingsReponse.getTimezone()));
+
+
+        meetingTypeCheckBox.setClickable(false);
+        meetingTypeCheckBox.setFocusable(false);
         if (meetingsReponse.isJsonMemberPublic()) {
             meetingTypeCheckBox.setChecked(true);
+            copyRelativeLayout.setVisibility(View.VISIBLE);
+            String meetingURL = meetingsReponse.getServerUrl() + "jc/" + meetingsReponse.getMeetingid();
+            copyTextView.setText(meetingURL);
         }
+        else {
+            meetingTypeCheckBox.setChecked(false);
+            copyRelativeLayout.setVisibility(View.GONE);
+        }
+        timeZoneTextView.setText(meetingsReponse.getTimezone());
+        timeZoneEndTextView.setText(meetingsReponse.getTimezone());
+
+        copyRelativeLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ClipboardManager clipboard = (ClipboardManager) getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText("Meeting Link", copyTextView.getText().toString());
+                clipboard.setPrimaryClip(clip);
+                Toast.makeText(getApplicationContext(), getApplicationContext().getResources().getString(R.string.url_copied), Toast.LENGTH_LONG).show();
+            }
+        });
         String attendeesString = meetingsReponse.getAttendees();
         StringReader sin = new StringReader(meetingsReponse.getVcalendar());
 

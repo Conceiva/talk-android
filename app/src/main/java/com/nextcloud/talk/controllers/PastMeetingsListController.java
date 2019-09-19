@@ -38,6 +38,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toolbar;
 
 import androidx.annotation.NonNull;
@@ -155,6 +156,12 @@ public class PastMeetingsListController extends BaseController implements Search
     @BindView(R.id.recycler_view)
     RecyclerView recyclerView;
 
+    @BindView(R.id.noDataTextView)
+    TextView noDataTextView;
+
+    @BindView(R.id.sendHiTextView)
+    TextView sendHiTextView;
+
     @BindView(R.id.swipeRefreshLayoutView)
     SwipeRefreshLayout swipeRefreshLayout;
 
@@ -201,7 +208,7 @@ public class PastMeetingsListController extends BaseController implements Search
 
     @Override
     protected View inflateView(@NonNull LayoutInflater inflater, @NonNull ViewGroup container) {
-        return inflater.inflate(R.layout.controller_conversations_rv, container, false);
+        return inflater.inflate(R.layout.controller_meetings_rv, container, false);
     }
 
     @Override
@@ -266,7 +273,14 @@ public class PastMeetingsListController extends BaseController implements Search
         if (currentUser != null) {
             credentials = ApiUtils.getCredentials(currentUser.getUsername(), currentUser.getToken());
             shouldUseLastMessageLayout = currentUser.hasSpreedFeatureCapability("last-room-activity");
-            fetchData(false);
+//            fetchData(false);
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    fetchData(false);
+                }
+            },500);
+
         }
 
     }
@@ -355,9 +369,11 @@ public class PastMeetingsListController extends BaseController implements Search
                     if (adapterWasNull) {
                         adapterWasNull = false;
                         progressBarView.setVisibility(View.GONE);
+                        noDataTextView.setVisibility(View.GONE);
                     }
 
-                    if (meetingsReponses.size() > 0) {
+
+                   /* if (meetingsReponses.size() > 0) {
                         if (emptyLayoutView.getVisibility() != View.GONE) {
                             emptyLayoutView.setVisibility(View.GONE);
                         }
@@ -370,10 +386,8 @@ public class PastMeetingsListController extends BaseController implements Search
                             emptyLayoutView.setVisibility(View.VISIBLE);
                         }
 
-                        if (swipeRefreshLayout.getVisibility() != View.GONE) {
                             swipeRefreshLayout.setVisibility(View.GONE);
-                        }
-                    }
+                    }*/
 
 
                     Collections.sort(meetingsReponses, new Comparator<MeetingsReponse>() {
@@ -458,6 +472,15 @@ public class PastMeetingsListController extends BaseController implements Search
                 callItems.add(conversationItem);
             }
         }
+
+        if (callItems.size() > 0) {
+                emptyLayoutView.setVisibility(View.GONE);
+                swipeRefreshLayout.setVisibility(View.VISIBLE);
+        } else {
+                emptyLayoutView.setVisibility(View.VISIBLE);
+            swipeRefreshLayout.setVisibility(View.GONE);
+        }
+
         eventBus.post(new MeetingApiCallEvent(scheduledMeetingResponses));
 
     }
@@ -486,11 +509,11 @@ public class PastMeetingsListController extends BaseController implements Search
         recyclerView.setHasFixedSize(true);
 
         recyclerView.setAdapter(adapter);
-
+        sendHiTextView.setText(context.getResources().getString(R.string.str_nodata_past_meeting));
         swipeRefreshLayout.setOnRefreshListener(() -> fetchData(false));
         swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
 
-        emptyLayoutView.setOnClickListener(v -> showNewConversationsScreen());
+//        emptyLayoutView.setOnClickListener(v -> showNewConversationsScreen());
         floatingActionButton.setOnClickListener(v -> {
             showNewConversationsScreen();
         });
@@ -511,6 +534,7 @@ public class PastMeetingsListController extends BaseController implements Search
             }
             return displayName;
         });
+
     }
 
     private void showNewConversationsScreen() {
