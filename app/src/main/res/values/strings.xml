@@ -317,8 +317,8 @@
     <string name="str_label_repeat_end">End repeat...</string>
     <string name="str_label_times">Times</string>
     <string name="str_meeting_ended">Meeting ended.</string>
-    <string name="err_landingpage">Oops! unable to get data to connect meeting session./nPlease try after some time.</string>
-    <string name="err_room_info">Oops! unable to get data to connect meeting session./nPlease try after some time.</string>
+    <string name="err_landingpage">Oops! unable to get data to connect meeting session.\nPlease try after some time.</string>
+    <string name="err_room_info">Oops! unable to get data to connect meeting session.\nPlease try after some time.</string>
     <string name="url_copied">Meeting URL Copied.</string>
     <string name="active">Active</string>
     <string name="str_nodata_scheduled_meeting">Welcome to Spreed online meetings</string>
@@ -327,6 +327,7 @@
     <string name="str_scheduled_end">Scheduled end</string>
     <string name="str_timezone">Timezone</string>
     <string name="err_join_room">We are facing issue in joining session for you. Please try after 1 minute.</string>
+    <string name="str_session_already_running">Sorry for inconvenience. \nIt appears that you have active session running in other device or session isn\'t ended properly.\nPlease wait around 60 seconds while we are restarting your session.</string>
 
 
 </resources>

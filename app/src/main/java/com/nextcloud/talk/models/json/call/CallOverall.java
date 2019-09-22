@@ -30,5 +30,5 @@ import org.parceler.Parcel;
 @JsonObject
 public class CallOverall {
     @JsonField(name = "ocs")
-    CallOCS ocs;
+    public CallOCS ocs;
 }

@@ -338,7 +338,7 @@ class MainActivity : BaseActivity(), ActionBarProvider {
 
                     if (throwable is HttpException) {
                         val exception = throwable as HttpException
-                        Toast.makeText(this@MainActivity,getString(R.string.err_landingpage),Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@MainActivity,getString(R.string.str_session_already_running),Toast.LENGTH_LONG).show()
                     }
 
                     dispose(roomsQueryDisposable)

@@ -162,8 +162,10 @@ public class ScheduledMeetingsListController extends BaseController implements S
     @BindView(R.id.fast_scroller)
     FastScroller fastScroller;
 
+/*
     @BindView(R.id.floatingActionButton)
     FloatingActionButton floatingActionButton;
+*/
 
     private UserEntity currentUser;
     private Disposable roomsQueryDisposable;

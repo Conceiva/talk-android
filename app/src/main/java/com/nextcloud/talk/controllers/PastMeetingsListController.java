@@ -174,8 +174,10 @@ public class PastMeetingsListController extends BaseController implements Search
     @BindView(R.id.fast_scroller)
     FastScroller fastScroller;
 
+/*
     @BindView(R.id.floatingActionButton)
     FloatingActionButton floatingActionButton;
+*/
 
     private UserEntity currentUser;
     private Disposable roomsQueryDisposable;
@@ -514,10 +516,10 @@ public class PastMeetingsListController extends BaseController implements Search
         swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
 
 //        emptyLayoutView.setOnClickListener(v -> showNewConversationsScreen());
-        floatingActionButton.setOnClickListener(v -> {
+      /*  floatingActionButton.setOnClickListener(v -> {
             showNewConversationsScreen();
         });
-
+*/
         fastScroller.addOnScrollStateChangeListener(this);
         adapter.setFastScroller(fastScroller);
 

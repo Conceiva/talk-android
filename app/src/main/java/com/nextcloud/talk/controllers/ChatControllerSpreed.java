@@ -87,6 +87,7 @@ import com.nextcloud.talk.models.json.chat.ChatOverall;
 import com.nextcloud.talk.models.json.conversations.Conversation;
 import com.nextcloud.talk.models.json.conversations.RoomOverall;
 import com.nextcloud.talk.models.json.conversations.RoomsOverall;
+import com.nextcloud.talk.models.json.generic.GenericMeta;
 import com.nextcloud.talk.models.json.generic.GenericOverall;
 import com.nextcloud.talk.models.json.landingpage.LandingResponseData;
 import com.nextcloud.talk.models.json.mention.Mention;
@@ -96,7 +97,9 @@ import com.nextcloud.talk.models.json.signaling.settings.SignalingSettingsOveral
 import com.nextcloud.talk.presenters.MentionAutocompletePresenter;
 import com.nextcloud.talk.utils.ApiUtils;
 import com.nextcloud.talk.utils.ConductorRemapping;
+import com.nextcloud.talk.utils.CustomProgressDialog;
 import com.nextcloud.talk.utils.DateUtils;
+import com.nextcloud.talk.utils.DialogUtils;
 import com.nextcloud.talk.utils.DisplayUtils;
 import com.nextcloud.talk.utils.KeyboardUtils;
 import com.nextcloud.talk.utils.MagicCharPolicy;
@@ -260,7 +263,7 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
     private WebSocketConnectionHelper webSocketConnectionHelper;
     private String callSession;
     List<ChatMessage> chatMessageList;
-
+    boolean isMessageAddedFromSocket=false;
     public ChatControllerSpreed(Bundle args) {
         super(args);
         setHasOptionsMenu(true);
@@ -410,7 +413,7 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
     @Override
     protected void onViewBound(@NonNull View view) {
         super.onViewBound(view);
-
+        isMessageAddedFromSocket=false;
         getActionBar().show();
         boolean adapterWasNull = false;
 
@@ -770,13 +773,21 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
 
         cancelNotificationsForCurrentConversation();
 
-        if (inChat) {
+       /* if (inChat) {
             if (wasDetached && conversationUser.hasSpreedFeatureCapability("no-ping")) {
                 currentCall = null;
                 wasDetached = false;
                 joinRoomWithPassword();
             }
+        }*/
+        if (inChat) {
+            if (wasDetached ) {
+                currentCall = null;
+                wasDetached = false;
+                joinRoomWithPassword();
+            }
         }
+
     }
 
     private void cancelNotificationsForCurrentConversation() {
@@ -799,6 +810,8 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
             wasDetached = true;
             leaveRoom();
         }
+//        20-9 Maulik enabled wasdetached to restart chat after call
+        wasDetached = true;
 
         if (mentionAutocomplete != null && mentionAutocomplete.isPopupShowing()) {
             mentionAutocomplete.dismissPopup();
@@ -832,8 +845,8 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
     }
 
     private void startPing() {
-        if (!conversationUser.hasSpreedFeatureCapability("no-ping")) {
-        /*    ncApi.pingCall(credentials, ApiUtils.getUrlForCallPing(conversationUser.getBaseUrl(), roomToken))
+       /* if (!conversationUser.hasSpreedFeatureCapability("no-ping")) {
+            ncApi.pingCall(credentials, ApiUtils.getUrlForCallPing(conversationUser.getBaseUrl(), roomToken))
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .repeatWhen(observable -> observable.delay(5000, TimeUnit.MILLISECONDS))
@@ -857,8 +870,8 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
                         @Override
                         public void onComplete() {
                         }
-                    });*/
-        }
+                    });
+        }*/
     }
 
     @OnClick(R.id.smileyButton)
@@ -871,6 +884,9 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
         if (currentCall == null) {
             String meetingSession= PreferenceHelper.getSharedPreferenceString(NextcloudTalkApplication.Companion.getSharedApplication().getApplicationContext(),"MEETING","");
             String hostSession=PreferenceHelper.getSharedPreferenceString(NextcloudTalkApplication.Companion.getSharedApplication().getApplicationContext(),"HOST","");
+//            DialogUtils.INSTANCE.showDialog(getActivity(),"DIALOG");
+
+            showDialog();
             ncApi.joinRoom(credentials,
                     ApiUtils.getUrlForSettingMyselfAsActiveParticipant(conversationUser.getBaseUrl(), roomToken),roomPassword)
                     .subscribeOn(Schedulers.io())
@@ -885,38 +901,46 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
                         @Override
                         public void onNext(CallOverall callOverall) {
                             inChat = true;
-                            currentCall = callOverall.getOcs().getData();
-                            ApplicationWideCurrentRoomHolder.getInstance().setSession(currentCall.getSessionId());
-                            startPing();
+                            hideDialog();
+                            GenericMeta metaData=callOverall.ocs.meta;
+                            if(metaData.statusCode==200) {
+//                            DialogUtils.INSTANCE.closeDialog(getActivity(),"DIALOG");
+                                currentCall = callOverall.getOcs().getData();
+                                ApplicationWideCurrentRoomHolder.getInstance().setSession(currentCall.getSessionId());
+                                startPing();
+                                checkLobbyState(false);
+                                setupWebsocket();
+                                if (isFirstMessagesProcessing) {
+                                    pullChatMessages(0);
+                                } else {
+                                    pullChatMessages(1);
+                                }
 
-                            checkLobbyState(false);
-
-                            setupWebsocket();
-
-                            if (isFirstMessagesProcessing) {
-                                pullChatMessages(0);
-                            } else {
-                                pullChatMessages(1);
+                                if (magicWebSocketInstance != null) {
+                                    magicWebSocketInstance.joinRoomWithRoomTokenAndSession(roomToken,
+                                            currentCall.getSessionId());
+                                }
+                                if (startCallFromNotification != null && startCallFromNotification) {
+                                    startCallFromNotification = false;
+                                    startACall(voiceOnly);
+                                }
                             }
-
-                            if (magicWebSocketInstance != null) {
-                                magicWebSocketInstance.joinRoomWithRoomTokenAndSession(roomToken,
-                                        currentCall.getSessionId());
-                            }
-                            if (startCallFromNotification != null && startCallFromNotification) {
-                                startCallFromNotification = false;
-                                startACall(voiceOnly);
+                            else {
+                                processJoinRoomError(callOverall);
                             }
                         }
 
                         @Override
                         public void onError(Throwable e) {
-                            Toast.makeText(context,context.getResources().getString(R.string.err_join_room),Toast.LENGTH_LONG).show();
+//                            DialogUtils.INSTANCE.closeDialog(getActivity(),"DIALOG");
+                            hideDialog();
+                            Toast.makeText(context,context.getResources().getString(R.string.str_session_already_running),Toast.LENGTH_LONG).show();
                         }
 
                         @Override
                         public void onComplete() {
-
+                            hideDialog();
+//                            DialogUtils.INSTANCE.closeDialog(getActivity(),"DIALOG");
                         }
                     });
         } else {
@@ -934,6 +958,17 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
             }
         }
     }
+
+    private void processJoinRoomError(CallOverall callOverall)
+    {
+        GenericMeta metaData=callOverall.ocs.meta;
+        if(metaData.statusCode==403)
+        {
+            Toast.makeText(context,context.getResources().getString(R.string.str_session_already_running),Toast.LENGTH_LONG).show();
+        }
+
+    }
+
 
     private void leaveRoom() {
         ncApi.leaveRoom(credentials,
@@ -1066,7 +1101,7 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
         if (!inChat) {
             return;
         }
-
+        isMessageAddedFromSocket=false;
         if (currentConversation.shouldShowLobby(conversationUser)) {
             return;
         }
@@ -1090,6 +1125,7 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
             fieldMap.put("lastKnownMessageId", lastKnown);
         }
 
+        showDialog();
         if (!wasDetached) {
             if (lookIntoFuture > 0) {
                 ncApi.pullChatMessages(credentials, ApiUtils.getUrlForChat(conversationUser.getBaseUrl(),
@@ -1116,6 +1152,9 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
                                 }
                                 if(globalLastKnownFutureMessageId==-1)
                                 Toast.makeText(context,"Chat not started yet",Toast.LENGTH_LONG).show();
+
+                                hideDialog();
+
                             }
 
                             @Override
@@ -1123,6 +1162,7 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
                                 if (currentConversation.shouldShowLobby(conversationUser)) {
                                     pullChatMessages(1);
                                 }
+                                hideDialog();
                             }
                         });
 
@@ -1131,7 +1171,6 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
                         ApiUtils.getUrlForChat(conversationUser.getBaseUrl(), roomToken), fieldMap)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
-                        .retry(3, observable -> inChat && !wasDetached)
                         .takeWhile(observable -> inChat && !wasDetached)
                         .subscribe(new Observer<Response>() {
                             @Override
@@ -1146,19 +1185,21 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
 
                             @Override
                             public void onError(Throwable e) {
-
+                                hideDialog();
                             }
 
                             @Override
                             public void onComplete() {
-
+                                hideDialog();
                             }
                         });
             }
         }
     }
 
+    /*When we are fetching messages for the first time, We are setting whole list in adapter and from the next time we are setting each individual message to the list*/
     private void processMessages(Response response, boolean isFromTheFuture) {
+        if(isMessageAddedFromSocket)return;
         if (response.code() == 200) {
             ChatOverall chatOverall = (ChatOverall) response.body();
             chatMessageList = chatOverall.getOcs().getData();
@@ -1286,6 +1327,7 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
     }
 
     private void processMessageFromSocket(Map<String,Object> messageMap1, boolean isFromTheFuture) {
+                isMessageAddedFromSocket=true;
                 ChatMessage chatMessage = new ChatMessage();
                 Map<String,Object> messageMap= (Map<String, Object>) messageMap1.get("comment");
                 chatMessage.actorType=messageMap.get("actorType").toString();
@@ -1313,7 +1355,7 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
                     } else {
                         newMessagesCount = 0;
                     }
-
+                    chatMessageList.add(0,chatMessage);
                     if (adapter != null) {
                         chatMessage.setGrouped(adapter.isPreviousSameAuthor(chatMessage.getActorId(), -1) && (adapter.getSameAuthorLastMessagesCount(chatMessage.getActorId()) % 5) > 0);
 
@@ -1326,6 +1368,8 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
 
 
                     }
+
+
 
                 globalLastKnownFutureMessageId=chatMessage.jsonMessageId;
 

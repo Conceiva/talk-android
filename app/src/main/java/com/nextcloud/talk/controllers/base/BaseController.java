@@ -39,6 +39,7 @@ import com.nextcloud.talk.controllers.ServerSelectionController;
 import com.nextcloud.talk.controllers.SwitchAccountController;
 import com.nextcloud.talk.controllers.WebViewLoginController;
 import com.nextcloud.talk.controllers.base.providers.ActionBarProvider;
+import com.nextcloud.talk.utils.CustomProgressDialog;
 import com.nextcloud.talk.utils.preferences.AppPreferences;
 
 import javax.inject.Inject;
@@ -167,4 +168,15 @@ public abstract class BaseController extends ButterKnifeController {
             }
         }
     }
+
+    public void showDialog()
+    {
+        CustomProgressDialog.INSTANCE.show(getActivity());
+    }
+
+    public void hideDialog()
+    {
+        CustomProgressDialog.INSTANCE.hide(getActivity());
+    }
+
 }

@@ -34,5 +34,5 @@ import org.parceler.Parcel;
 @EqualsAndHashCode(callSuper=false)
 public class CallOCS extends GenericOCS {
     @JsonField(name = "data")
-    Call data;
+    public Call data;
 }
