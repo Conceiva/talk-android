@@ -41,6 +41,36 @@
         android:indeterminateTintMode="src_in"
         android:visibility="gone" />
 
+    <RelativeLayout
+        android:id="@+id/emptyLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:visibility="gone"
+        >
+
+        <ImageView
+            android:id="@+id/noParticipantsImageView"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_centerInParent="true"
+            android:src="@drawable/ic_chat_black_24dp"
+            android:tint="@color/white"
+            />
+
+        <TextView
+            android:id="@+id/participantsTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/noParticipantsImageView"
+            android:layout_margin="8dp"
+            android:text="@string/nc_no_messages_yet"
+            android:textAlignment="center"
+            android:textSize="20sp"
+
+            />
+    </RelativeLayout>
+
     <View
         android:id="@+id/separator"
         android:layout_width="match_parent"

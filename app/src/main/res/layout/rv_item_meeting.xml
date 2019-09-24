@@ -51,7 +51,7 @@
             android:layout_alignParentStart="true"
             android:layout_toLeftOf="@+id/meetingType"
             android:textColor="@color/white"
-            style="@style/textViewBig"
+            style="@style/textViewMedium"
             android:singleLine="true"
             android:lines="1"
             android:ellipsize="end"
@@ -61,12 +61,12 @@
             android:id="@+id/meetingType"
             android:layout_alignParentEnd="true"
             android:layout_marginStart="8dp"
-            style="@style/textViewBig"
+            style="@style/textViewSmall"
             tools:text="Private" />
 
         <TextView
             android:id="@+id/meetingID"
-            style="@style/textViewMedium"
+            style="@style/textViewSmall"
             android:layout_below="@+id/meetingTitle"
             android:layout_alignParentStart="true"
             tools:text="Private" />
@@ -92,7 +92,7 @@
 
             <TextView
                 android:id="@+id/meetingActiveTextView"
-                style="@style/textViewMedium"
+                style="@style/textViewSmall"
                 android:text="@string/active"
                 android:layout_marginLeft="@dimen/dp_5"
                 android:layout_gravity="center_vertical"
@@ -125,7 +125,7 @@
 
         <TextView
             android:id="@+id/meetingDateTextView"
-            style="@style/textViewMedium"
+            style="@style/textViewSmall"
             android:layout_marginLeft="@dimen/dp_5"
             android:layout_gravity="center_vertical"
             />
@@ -152,7 +152,7 @@
 
         <TextView
             android:id="@+id/meetingTimeTextView"
-            style="@style/textViewMedium"
+            style="@style/textViewSmall"
             android:layout_marginLeft="@dimen/dp_5"
             android:layout_gravity="center_vertical"
             />
@@ -179,7 +179,7 @@
 
         <TextView
             android:id="@+id/meetingHostTextView"
-            style="@style/textViewMedium"
+            style="@style/textViewSmall"
             tools:text="Host"
             android:layout_marginLeft="@dimen/dp_5"
             android:layout_gravity="center_vertical"

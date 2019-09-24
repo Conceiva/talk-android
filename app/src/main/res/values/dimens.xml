@@ -47,7 +47,7 @@
     <dimen name="dp_8">8dp</dimen>
     <dimen name="font_big">16sp</dimen>
     <dimen name="dp_24">24dp</dimen>
-    <dimen name="meeting_icon_height">20dp</dimen>
+    <dimen name="meeting_icon_height">15dp</dimen>
     <dimen name="font_medium">14sp</dimen>
     <dimen name="dp_16">16dp</dimen>
     <dimen name="dp_10">10dp</dimen>

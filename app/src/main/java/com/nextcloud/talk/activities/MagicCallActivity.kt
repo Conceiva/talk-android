@@ -36,6 +36,7 @@ import com.bluelinelabs.conductor.changehandler.HorizontalChangeHandler
 import com.nextcloud.talk.R
 import com.nextcloud.talk.application.NextcloudTalkApplication
 import com.nextcloud.talk.controllers.CallController
+import com.nextcloud.talk.controllers.CallControllerSpreed
 import com.nextcloud.talk.controllers.CallNotificationController
 import com.nextcloud.talk.events.ConfigurationChangeEvent
 import com.nextcloud.talk.utils.bundle.BundleKeys
@@ -71,7 +72,7 @@ class MagicCallActivity : BaseActivity() {
                         .pushChangeHandler(HorizontalChangeHandler())
                         .popChangeHandler(HorizontalChangeHandler()))
             } else {
-                router!!.setRoot(RouterTransaction.with(CallController(intent.extras))
+                router!!.setRoot(RouterTransaction.with(CallControllerSpreed(intent.extras))
                         .pushChangeHandler(HorizontalChangeHandler())
                         .popChangeHandler(HorizontalChangeHandler()))
             }

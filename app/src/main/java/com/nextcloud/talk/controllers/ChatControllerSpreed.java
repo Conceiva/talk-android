@@ -67,7 +67,6 @@ import com.nextcloud.talk.R;
 import com.nextcloud.talk.activities.MagicCallActivity;
 
 
-
 import com.nextcloud.talk.api.NcApi;
 import com.nextcloud.talk.application.NextcloudTalkApplication;
 import com.nextcloud.talk.callbacks.MentionAutocompleteCallback;
@@ -115,6 +114,7 @@ import com.nextspreed.adapters.messages.MagicIncomingTextMessageViewHolder;
 import com.nextspreed.adapters.messages.MagicOutcomingTextMessageViewHolder;
 import com.nextspreed.adapters.messages.MagicPreviewMessageViewHolder;
 import com.nextspreed.adapters.messages.MagicSystemMessageViewHolder;
+import com.nextspreed.controllers.ConversationParticipantsController;
 import com.otaliastudios.autocomplete.Autocomplete;
 import com.otaliastudios.autocomplete.AutocompleteCallback;
 import com.otaliastudios.autocomplete.AutocompletePresenter;
@@ -215,6 +215,9 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
     @BindView(R.id.meetingTimeZoneValueTextView)
     TextView meetingTimeZoneValueTextView;
 
+    @BindView(R.id.emptyLayout)
+    RelativeLayout emptyLayout;
+
     private List<Disposable> disposableList = new ArrayList<>();
     private String conversationName;
     private String roomToken;
@@ -263,7 +266,8 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
     private WebSocketConnectionHelper webSocketConnectionHelper;
     private String callSession;
     List<ChatMessage> chatMessageList;
-    boolean isMessageAddedFromSocket=false;
+    boolean isMessageAddedFromSocket = false;
+
     public ChatControllerSpreed(Bundle args) {
         super(args);
         setHasOptionsMenu(true);
@@ -291,7 +295,7 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
        /* if (conversationUser.getUserId().equals("?")) {
             credentials = null;
         } else {*/
-            credentials = ApiUtils.getCredentials(conversationUser.getUsername(), conversationUser.getToken());
+        credentials = ApiUtils.getCredentials(conversationUser.getUsername(), conversationUser.getToken());
 //        }
 
         if (args.containsKey(BundleKeys.INSTANCE.getKEY_FROM_NOTIFICATION_START_CALL())) {
@@ -339,14 +343,14 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
                             joinRoomWithPassword();
                         }*/
 //                        if (oldConversation == null || oldConversation.getRoomId() == null) {
-                            joinRoomWithPassword();
+                        joinRoomWithPassword();
 //                        }
 
                     }
 
                     @Override
                     public void onError(Throwable e) {
-                        Toast.makeText(context,context.getResources().getString(R.string.err_room_info),Toast.LENGTH_LONG).show();
+                        Toast.makeText(context, context.getResources().getString(R.string.err_room_info), Toast.LENGTH_LONG).show();
                     }
 
                     @Override
@@ -413,7 +417,7 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
     @Override
     protected void onViewBound(@NonNull View view) {
         super.onViewBound(view);
-        isMessageAddedFromSocket=false;
+        isMessageAddedFromSocket = false;
         getActionBar().show();
         boolean adapterWasNull = false;
 
@@ -618,8 +622,7 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
 //            lobbyStateChanged=true;
 //            fetchSignalingSettings();
 
-            if(landingPageResponse.started||currentConversation.participantType.equals(Participant.ParticipantType.MODERATOR)||currentConversation.participantType.equals(Participant.ParticipantType.OWNER))
-            {
+            if (landingPageResponse.started || currentConversation.participantType.equals(Participant.ParticipantType.MODERATOR) || currentConversation.participantType.equals(Participant.ParticipantType.OWNER)) {
                 lobbyView.setVisibility(View.GONE);
                 messagesListView.setVisibility(View.VISIBLE);
                 messageInput.setVisibility(View.VISIBLE);
@@ -636,13 +639,12 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
                         pullChatMessages(1);
                     }
                 }
-            }
-            else {
+            } else {
                 lobbyView.setVisibility(View.VISIBLE);
                 messagesListView.setVisibility(View.GONE);
                 messageInputView.setVisibility(View.GONE);
                 loadingProgressBar.setVisibility(View.GONE);
-                inChat=false;
+                inChat = false;
                 feelLobbyData(currentConversation);
 
             }
@@ -675,15 +677,14 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
         }
     }
 
-    private void feelLobbyData(Conversation currentConversation)
-    {
+    private void feelLobbyData(Conversation currentConversation) {
         if (currentConversation.getLobbyTimer() != null && currentConversation.getLobbyTimer() != 0) {
 
             conversationLobbyText.setText(String.format(getResources().getString(R.string.nc_lobby_waiting_with_date), DateUtils.INSTANCE.getLocalDateStringFromTimestampForLobby(currentConversation.getLobbyTimer())));
         } else {
             conversationLobbyText.setText(R.string.nc_lobby_waiting);
         }
-        nameTextView.setText("Welcome, "+ userUtils.getCurrentUser().getDisplayName());
+        nameTextView.setText("Welcome, " + userUtils.getCurrentUser().getDisplayName());
         meetingIdValueTextView.setText(currentConversation.token);
         meetingTitleValueTextView.setText(currentConversation.name);
         meetingDetailsValueTextView.setText(landingPageResponse.description);
@@ -710,7 +711,18 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
         bundle.putString(BundleKeys.INSTANCE.getKEY_ROOM_TOKEN(), roomToken);
         getRouter().pushController((RouterTransaction.with(new ConversationInfoController(bundle))
                 .pushChangeHandler(new HorizontalChangeHandler())
-                .popChangeHandler(new HorizontalChangeHandler())));
+                .popChangeHandler(new HorizontalChangeHandler())
+                .tag(ConversationParticipantsController.TAG)));
+    }
+
+    private void showParticipantsScreen() {
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(BundleKeys.INSTANCE.getKEY_USER_ENTITY(), conversationUser);
+        bundle.putString(BundleKeys.INSTANCE.getKEY_ROOM_TOKEN(), roomToken);
+        getRouter().pushController((RouterTransaction.with(new ConversationParticipantsController(bundle))
+                .pushChangeHandler(new HorizontalChangeHandler())
+                .popChangeHandler(new HorizontalChangeHandler())
+                .tag(ConversationParticipantsController.TAG)));
     }
 
     private void setupMentionAutocomplete() {
@@ -781,7 +793,7 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
             }
         }*/
         if (inChat) {
-            if (wasDetached ) {
+            if (wasDetached) {
                 currentCall = null;
                 wasDetached = false;
                 joinRoomWithPassword();
@@ -882,13 +894,13 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
     private void joinRoomWithPassword() {
 
         if (currentCall == null) {
-            String meetingSession= PreferenceHelper.getSharedPreferenceString(NextcloudTalkApplication.Companion.getSharedApplication().getApplicationContext(),"MEETING","");
-            String hostSession=PreferenceHelper.getSharedPreferenceString(NextcloudTalkApplication.Companion.getSharedApplication().getApplicationContext(),"HOST","");
+            String meetingSession = PreferenceHelper.getSharedPreferenceString(NextcloudTalkApplication.Companion.getSharedApplication().getApplicationContext(), "MEETING", "");
+            String hostSession = PreferenceHelper.getSharedPreferenceString(NextcloudTalkApplication.Companion.getSharedApplication().getApplicationContext(), "HOST", "");
 //            DialogUtils.INSTANCE.showDialog(getActivity(),"DIALOG");
 
             showDialog();
             ncApi.joinRoom(credentials,
-                    ApiUtils.getUrlForSettingMyselfAsActiveParticipant(conversationUser.getBaseUrl(), roomToken),roomPassword)
+                    ApiUtils.getUrlForSettingMyselfAsActiveParticipant(conversationUser.getBaseUrl(), roomToken), roomPassword)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .retry(3)
@@ -902,8 +914,8 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
                         public void onNext(CallOverall callOverall) {
                             inChat = true;
                             hideDialog();
-                            GenericMeta metaData=callOverall.ocs.meta;
-                            if(metaData.statusCode==200) {
+                            GenericMeta metaData = callOverall.ocs.meta;
+                            if (metaData.statusCode == 200) {
 //                            DialogUtils.INSTANCE.closeDialog(getActivity(),"DIALOG");
                                 currentCall = callOverall.getOcs().getData();
                                 ApplicationWideCurrentRoomHolder.getInstance().setSession(currentCall.getSessionId());
@@ -924,8 +936,7 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
                                     startCallFromNotification = false;
                                     startACall(voiceOnly);
                                 }
-                            }
-                            else {
+                            } else {
                                 processJoinRoomError(callOverall);
                             }
                         }
@@ -934,7 +945,7 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
                         public void onError(Throwable e) {
 //                            DialogUtils.INSTANCE.closeDialog(getActivity(),"DIALOG");
                             hideDialog();
-                            Toast.makeText(context,context.getResources().getString(R.string.str_session_already_running),Toast.LENGTH_LONG).show();
+                            Toast.makeText(context, context.getResources().getString(R.string.str_session_already_running), Toast.LENGTH_LONG).show();
                         }
 
                         @Override
@@ -959,12 +970,10 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
         }
     }
 
-    private void processJoinRoomError(CallOverall callOverall)
-    {
-        GenericMeta metaData=callOverall.ocs.meta;
-        if(metaData.statusCode==403)
-        {
-            Toast.makeText(context,context.getResources().getString(R.string.str_session_already_running),Toast.LENGTH_LONG).show();
+    private void processJoinRoomError(CallOverall callOverall) {
+        GenericMeta metaData = callOverall.ocs.meta;
+        if (metaData.statusCode == 403) {
+            Toast.makeText(context, context.getResources().getString(R.string.str_session_already_running), Toast.LENGTH_LONG).show();
         }
 
     }
@@ -1087,7 +1096,7 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
     }
 
     private void setupWebsocket() {
-        if(magicWebSocketInstance==null) {
+        if (magicWebSocketInstance == null) {
             if (WebSocketConnectionHelper.getMagicWebSocketInstanceForUserId(conversationUser.getId()) != null) {
                 magicWebSocketInstance = WebSocketConnectionHelper.getMagicWebSocketInstanceForUserId(conversationUser.getId());
             } else {
@@ -1097,11 +1106,11 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
     }
 
     private void pullChatMessages(int lookIntoFuture) {
-        inChat=true;
+        inChat = true;
         if (!inChat) {
             return;
         }
-        isMessageAddedFromSocket=false;
+        isMessageAddedFromSocket = false;
         if (currentConversation.shouldShowLobby(conversationUser)) {
             return;
         }
@@ -1150,8 +1159,8 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
                                 if (loadingProgressBar != null) {
                                     loadingProgressBar.setVisibility(View.GONE);
                                 }
-                                if(globalLastKnownFutureMessageId==-1)
-                                Toast.makeText(context,"Chat not started yet",Toast.LENGTH_LONG).show();
+                                if (globalLastKnownFutureMessageId == -1)
+                                    Toast.makeText(context, "Chat not started yet", Toast.LENGTH_LONG).show();
 
                                 hideDialog();
 
@@ -1186,6 +1195,13 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
                             @Override
                             public void onError(Throwable e) {
                                 hideDialog();
+                                if (isFirstMessagesProcessing) {
+                                    emptyLayout.setVisibility(View.VISIBLE);
+                                    messagesListView.setVisibility(View.GONE);
+                                } else {
+                                    emptyLayout.setVisibility(View.GONE);
+                                    messagesListView.setVisibility(View.VISIBLE);
+                                }
                             }
 
                             @Override
@@ -1199,7 +1215,7 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
 
     /*When we are fetching messages for the first time, We are setting whole list in adapter and from the next time we are setting each individual message to the list*/
     private void processMessages(Response response, boolean isFromTheFuture) {
-        if(isMessageAddedFromSocket)return;
+        if (isMessageAddedFromSocket) return;
         if (response.code() == 200) {
             ChatOverall chatOverall = (ChatOverall) response.body();
             chatMessageList = chatOverall.getOcs().getData();
@@ -1217,7 +1233,13 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
                 if (messagesListView != null) {
                     messagesListView.setVisibility(View.VISIBLE);
                 }
-
+                if (chatMessageList.size() > 0) {
+                    emptyLayout.setVisibility(View.GONE);
+                    messagesListView.setVisibility(View.VISIBLE);
+                } else {
+                    messagesListView.setVisibility(View.GONE);
+                    emptyLayout.setVisibility(View.VISIBLE);
+                }
             }
 
             int countGroupedMessages = 0;
@@ -1311,11 +1333,16 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
         } else if (response.code() == 304 && !isFromTheFuture) {
             if (isFirstMessagesProcessing) {
                 cancelNotificationsForCurrentConversation();
+                messagesListView.setVisibility(View.GONE);
+                emptyLayout.setVisibility(View.VISIBLE);
 
                 isFirstMessagesProcessing = false;
                 if (loadingProgressBar != null) {
                     loadingProgressBar.setVisibility(View.GONE);
                 }
+            } else {
+                emptyLayout.setVisibility(View.GONE);
+                messagesListView.setVisibility(View.VISIBLE);
             }
 
             historyRead = true;
@@ -1326,55 +1353,57 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
         }
     }
 
-    private void processMessageFromSocket(Map<String,Object> messageMap1, boolean isFromTheFuture) {
-                isMessageAddedFromSocket=true;
-                ChatMessage chatMessage = new ChatMessage();
-                Map<String,Object> messageMap= (Map<String, Object>) messageMap1.get("comment");
-                chatMessage.actorType=messageMap.get("actorType").toString();
-                chatMessage.actorId=messageMap.get("actorId").toString();
-                chatMessage.actorDisplayName=messageMap.get("actorDisplayName").toString();
-                chatMessage.jsonMessageId= Integer.parseInt(String.valueOf(messageMap.get("id")));
-                chatMessage.message= (String) messageMap.get("message");
-                chatMessage.token= (String) messageMap.get("token");
-                chatMessage.timestamp= (long)(messageMap.get("timestamp"));
-                chatMessage.activeUser=conversationUser;
-//                chatMessage.messageParameters= (HashMap<String, HashMap<String, String>>) messageMap.get("messageParameters");
+    private void processMessageFromSocket(Map<String, Object> messageMap1, boolean isFromTheFuture) {
+        isMessageAddedFromSocket = true;
+        if(chatMessageList==null)
+            chatMessageList=new ArrayList<>();
+        ChatMessage chatMessage = new ChatMessage();
+        Map<String, Object> messageMap = (Map<String, Object>) messageMap1.get("comment");
+        chatMessage.actorType = messageMap.get("actorType").toString();
+        chatMessage.actorId = messageMap.get("actorId").toString();
+        chatMessage.actorDisplayName = messageMap.get("actorDisplayName").toString();
+        chatMessage.jsonMessageId = Integer.parseInt(String.valueOf(messageMap.get("id")));
+        chatMessage.message = (String) messageMap.get("message");
+        chatMessage.token = (String) messageMap.get("token");
+        chatMessage.timestamp = (long) (messageMap.get("timestamp"));
+        chatMessage.activeUser = conversationUser;
+//              chatMessage.messageParameters= (HashMap<String, HashMap<String, String>>) messageMap.get("messageParameters");
 
 
+        boolean shouldScroll = layoutManager.findFirstVisibleItemPosition() == 0 ||
+                (adapter != null && adapter.getItemCount() == 0);
 
-                    boolean shouldScroll = layoutManager.findFirstVisibleItemPosition() == 0 ||
-                            (adapter != null && adapter.getItemCount() == 0);
-
-                    if (!shouldScroll && popupBubble != null) {
-                        if (!popupBubble.isShown()) {
-                            newMessagesCount = 1;
-                            popupBubble.show();
-                        } else if (popupBubble.isShown()) {
-                            newMessagesCount++;
-                        }
-                    } else {
-                        newMessagesCount = 0;
-                    }
-                    chatMessageList.add(0,chatMessage);
-                    if (adapter != null) {
-                        chatMessage.setGrouped(adapter.isPreviousSameAuthor(chatMessage.getActorId(), -1) && (adapter.getSameAuthorLastMessagesCount(chatMessage.getActorId()) % 5) > 0);
-
-                        new Handler(Looper.getMainLooper()).post(new Runnable() {
-                            @Override
-                            public void run() {
-                                adapter.addToStart(chatMessage, shouldScroll);
-                            }
-                        });
-
-
-                    }
-
-
-
-                globalLastKnownFutureMessageId=chatMessage.jsonMessageId;
-
+        if (!shouldScroll && popupBubble != null) {
+            if (!popupBubble.isShown()) {
+                newMessagesCount = 1;
+                popupBubble.show();
+            } else if (popupBubble.isShown()) {
+                newMessagesCount++;
             }
+        } else {
+            newMessagesCount = 0;
+        }
+        chatMessageList.add(0, chatMessage);
+        if (adapter != null) {
+            chatMessage.setGrouped(adapter.isPreviousSameAuthor(chatMessage.getActorId(), -1) && (adapter.getSameAuthorLastMessagesCount(chatMessage.getActorId()) % 5) > 0);
 
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    adapter.addToStart(chatMessage, shouldScroll);
+                    if(messagesListView.getVisibility()==View.GONE) {
+                        emptyLayout.setVisibility(View.GONE);
+                        messagesListView.setVisibility(View.VISIBLE);
+                    }
+                }
+            });
+
+
+        }
+
+        globalLastKnownFutureMessageId = chatMessage.jsonMessageId;
+
+    }
 
 
     @Override
@@ -1399,7 +1428,7 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.menu_conversation, menu);
+        inflater.inflate(R.menu.menu_conversation_participants, menu);
         if (conversationUser.getUserId().equals("?")) {
             menu.removeItem(R.id.conversation_info);
         } else {
@@ -1438,6 +1467,9 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
                 return false;
             case R.id.conversation_info:
                 showConversationInfoScreen();
+                return true;
+            case R.id.participants:
+                showParticipantsScreen();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -1530,7 +1562,7 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
         switch (webSocketCommunicationEvent.type) {
 
             case "comment":
-                processMessageFromSocket(webSocketCommunicationEvent.messageHashMap,true);
+                processMessageFromSocket(webSocketCommunicationEvent.messageHashMap, true);
 //                if (webSocketCommunicationEvent.hashMap.get(BundleKeys.INSTANCE.getKEY_INTERNAL_USER_ID()).equals(Long.toString(conversationUser.getId()))) {
 //                    if (roomToken.equals(webSocketCommunicationEvent.hashMap.get(BundleKeys.INSTANCE.getKEY_ROOM_TOKEN()))) {
 //                        pullChatMessages(2);
@@ -1601,7 +1633,6 @@ public class ChatControllerSpreed extends BaseController implements MessagesList
                     });
         }
     }
-
 
 
 }

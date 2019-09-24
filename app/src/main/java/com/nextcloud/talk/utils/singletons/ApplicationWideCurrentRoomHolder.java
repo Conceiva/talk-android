@@ -21,12 +21,30 @@
 package com.nextcloud.talk.utils.singletons;
 
 import com.nextcloud.talk.models.database.UserEntity;
+import com.nextcloud.talk.models.json.participants.Participant;
+
+import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class ApplicationWideCurrentRoomHolder {
     private static final ApplicationWideCurrentRoomHolder holder = new ApplicationWideCurrentRoomHolder();
     private String currentRoomId = "";
     private String currentRoomToken = "";
     private UserEntity userInRoom = new UserEntity();
+
+    public List<HashMap<String, Object>> getParticipantsList() {
+        return participantsList;
+    }
+
+    public void setParticipantsList(List<HashMap<String, Object>> participantsList) {
+        this.participantsList = participantsList;
+    }
+
+    List<HashMap<String, Object>> participantsList=new ArrayList<>();
+//    private <L userInRoom = new UserEntity();
     private boolean inCall = false;
     private String session = "";
 
@@ -40,6 +58,7 @@ public class ApplicationWideCurrentRoomHolder {
         inCall = false;
         currentRoomToken = "";
         session = "";
+        participantsList.clear();
     }
 
     public String getCurrentRoomToken() {
@@ -80,5 +99,15 @@ public class ApplicationWideCurrentRoomHolder {
 
     public void setSession(String session) {
         this.session = session;
+    }
+
+    public HashMap<String,Object> getParticipantForSessionID(@NotNull String sessionId) {
+        HashMap<String,Object> selectedparticipant=null;
+        for(HashMap<String,Object> participant:  participantsList )
+        {
+            if(participant.get("sessionId").toString().equalsIgnoreCase(sessionId))
+            selectedparticipant=participant;
+        }
+        return selectedparticipant;
     }
 }

@@ -61,6 +61,7 @@ import com.nextcloud.talk.models.json.participants.Participant
 import com.nextcloud.talk.utils.*
 import com.nextcloud.talk.utils.bundle.BundleKeys
 import com.nextcloud.talk.utils.database.user.UserUtils
+import com.nextspreed.controllers.ConversationParticipantsController
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.items.AbstractFlexibleItem
 import io.reactivex.Observer
@@ -198,6 +199,11 @@ class MainActivity : BaseActivity(), ActionBarProvider {
 
     override fun onBackPressed() {
         if (router!!.getControllerWithTag(LockedController.TAG) != null) {
+            return
+        }
+        if(router!!.getControllerWithTag(ConversationParticipantsController.TAG)!= null)
+        {
+            router!!.popCurrentController()
             return
         }
         if(router!!.backstackSize>1) {

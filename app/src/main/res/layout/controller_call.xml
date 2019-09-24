@@ -121,6 +121,17 @@
                 app:backgroundImage="@color/colorPrimary"
                 app:placeholderImage="@drawable/ic_volume_mute_white_24dp"
                 app:roundAsCircle="true" />
+            <com.facebook.drawee.view.SimpleDraweeView xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/participantsImageView"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                app:backgroundImage="@color/colorPrimary"
+                app:placeholderImage="@drawable/ic_participants"
+                app:roundAsCircle="true"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginEnd="24dp"
+                />
 
         </LinearLayout>
 
@@ -139,4 +150,9 @@
         layout="@layout/call_states"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+
+
+
+
 </RelativeLayout>

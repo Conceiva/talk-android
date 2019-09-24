@@ -58,6 +58,9 @@ public class Participant {
     public Object inCall;
     public String source;
 
+    public AudioFlags audioStatus=AudioFlags.DISABLED;
+    public VideoFlags videoStatus=VideoFlags.DISABLED;
+
     public boolean selected;
 
 
@@ -76,6 +79,30 @@ public class Participant {
         }
 
         return participantFlags;
+    }
+
+    public static ParticipantType getParticipantType(int participantType)
+    {
+
+        switch (participantType)
+        {
+            case 0:
+                return ParticipantType.DUMMY;
+
+            case 1:
+                return ParticipantType.OWNER;
+            case 2:
+                return ParticipantType.MODERATOR;
+            case 3:
+                return ParticipantType.USER;
+            case 4:
+                return ParticipantType.GUEST;
+            case 5:
+                return ParticipantType.USER_FOLLOWING_LINK;
+            default:
+                return ParticipantType.DUMMY;
+        }
+
     }
 
     public enum ParticipantType {
@@ -121,4 +148,64 @@ public class Participant {
         }
 
     }
+
+
+    public enum AudioFlags {
+        DISABLED(0),
+        ENABLED(1),
+        SPEAKING(2);
+
+        private long value;
+
+        AudioFlags(long value) {
+            this.value = value;
+        }
+
+        public static AudioFlags fromValue(long value) {
+            if (value == 0) {
+                return DISABLED;
+            } else if (value == 1) {
+                return ENABLED;
+            } else if (value == 2) {
+                return SPEAKING;
+            } else {
+                return DISABLED;
+            }
+        }
+
+        public long getValue() {
+            return value;
+        }
+
+    }
+
+    public enum VideoFlags {
+        DISABLED(0),
+        ENABLED(1),
+        SPEAKING(2);
+
+        private long value;
+
+        VideoFlags(long value) {
+            this.value = value;
+        }
+
+        public static VideoFlags fromValue(long value) {
+            if (value == 0) {
+                return DISABLED;
+            } else if (value == 1) {
+                return ENABLED;
+            } else if (value == 2) {
+                return SPEAKING;
+            } else {
+                return DISABLED;
+            }
+        }
+
+        public long getValue() {
+            return value;
+        }
+
+    }
+
 }
