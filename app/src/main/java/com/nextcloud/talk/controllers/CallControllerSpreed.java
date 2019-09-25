@@ -106,6 +106,9 @@ import com.nextcloud.talk.webrtc.MagicWebRTCUtils;
 import com.nextcloud.talk.webrtc.MagicWebSocketInstance;
 import com.nextcloud.talk.webrtc.WebSocketConnectionHelper;
 import com.nextspreed.controllers.ConversationParticipantsController;
+import com.nextspreed.events.PeerIdEvent;
+import com.nextspreed.events.UserAddRemoveEvent;
+import com.nextspreed.utils.ApplicationWideConstants;
 import com.wooplr.spotlight.SpotlightView;
 
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -272,7 +275,7 @@ public class CallControllerSpreed extends BaseController {
     private String credentials;
     public List<MagicPeerConnectionWrapper> magicPeerConnectionWrapperList = new ArrayList<>();
     private Map<String, Participant> participantMap = new HashMap<>();
-    public static List<HashMap<String, Object>> participantsList=new ArrayList<>();
+    public static List<HashMap<String, Object>> participantsList = new ArrayList<>();
     private boolean videoOn = false;
     private boolean audioOn = false;
 
@@ -384,10 +387,10 @@ public class CallControllerSpreed extends BaseController {
         participantsImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Bundle bundle=new Bundle();
+                Bundle bundle = new Bundle();
                 bundle.putParcelable(BundleKeys.INSTANCE.getKEY_USER_ENTITY(), conversationUser);
                 bundle.putString(BundleKeys.INSTANCE.getKEY_ROOM_TOKEN(), roomToken);
-                prepareAndShowBottomSheetWithBundle(bundle,true);
+                prepareAndShowBottomSheetWithBundle(bundle, true);
             }
         });
     }
@@ -1161,7 +1164,7 @@ public class CallControllerSpreed extends BaseController {
         ncApi.joinCall(credentials,
                 ApiUtils.getUrlForCall(baseUrl, roomToken))
                 .subscribeOn(Schedulers.io())
-                .retry(3)
+                .retry(1)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<GenericOverall>() {
                     @Override
@@ -1176,7 +1179,7 @@ public class CallControllerSpreed extends BaseController {
 
                             ApplicationWideCurrentRoomHolder.getInstance().setInCall(true);
 
-                            if (needsPing) {
+                            /*if (needsPing) {
                                 ncApi.pingCall(credentials, ApiUtils.getUrlForCallPing(baseUrl, roomToken))
                                         .subscribeOn(Schedulers.io())
                                         .observeOn(AndroidSchedulers.mainThread())
@@ -1204,7 +1207,7 @@ public class CallControllerSpreed extends BaseController {
                                                 dispose(pingDisposable);
                                             }
                                         });
-                            }
+                            }*/
 
                             // Start pulling signaling messages
                             String urlToken = null;
@@ -1218,7 +1221,7 @@ public class CallControllerSpreed extends BaseController {
                                 NotificationUtils.INSTANCE.cancelExistingNotificationsForRoom(getApplicationContext(), conversationUser, roomToken);
                             }
 
-                            if (!hasExternalSignalingServer) {
+                            /*if (!hasExternalSignalingServer) {
                                 ncApi.pullSignalingMessages(credentials, ApiUtils.getUrlForSignaling(baseUrl, urlToken))
                                         .subscribeOn(Schedulers.io())
                                         .observeOn(AndroidSchedulers.mainThread())
@@ -1257,7 +1260,7 @@ public class CallControllerSpreed extends BaseController {
                                         });
 
 
-                            }
+                            }*/
                         }
                     }
 
@@ -1375,61 +1378,61 @@ public class CallControllerSpreed extends BaseController {
 
     private void processMessage(NCSignalingMessage ncSignalingMessage) {
         try {
-        if(ncSignalingMessage!=null) {
-            if (ncSignalingMessage.getRoomType().equals("video") || ncSignalingMessage.getRoomType().equals("screen")) {
-                MagicPeerConnectionWrapper magicPeerConnectionWrapper =
-                        getPeerConnectionWrapperForSessionIdAndType(ncSignalingMessage.getFrom(),
-                                ncSignalingMessage.getRoomType(), false);
+            if (ncSignalingMessage != null) {
+                if (ncSignalingMessage.getRoomType().equals("video") || ncSignalingMessage.getRoomType().equals("screen")) {
+                    MagicPeerConnectionWrapper magicPeerConnectionWrapper =
+                            getPeerConnectionWrapperForSessionIdAndType(ncSignalingMessage.getFrom(),
+                                    ncSignalingMessage.getRoomType(), false);
 
-                String type = null;
-                if (ncSignalingMessage.getPayload() != null && ncSignalingMessage.getPayload().getType() != null) {
-                    type = ncSignalingMessage.getPayload().getType();
-                } else if (ncSignalingMessage.getType() != null) {
-                    type = ncSignalingMessage.getType();
-                }
-
-                if (type != null) {
-                    switch (type) {
-                        case "unshareScreen":
-                            endPeerConnection(ncSignalingMessage.getFrom(), true);
-                            break;
-                        case "offer":
-                        case "answer":
-                            magicPeerConnectionWrapper.setNick(ncSignalingMessage.getPayload().getNick());
-                            SessionDescription sessionDescriptionWithPreferredCodec;
-
-                            String sessionDescriptionStringWithPreferredCodec = MagicWebRTCUtils.preferCodec
-                                    (ncSignalingMessage.getPayload().getSdp(),
-                                            "H264", false);
-
-                            sessionDescriptionWithPreferredCodec = new SessionDescription(
-                                    SessionDescription.Type.fromCanonicalForm(type),
-                                    sessionDescriptionStringWithPreferredCodec);
-
-                            if (magicPeerConnectionWrapper.getPeerConnection() != null) {
-                                magicPeerConnectionWrapper.getPeerConnection().setRemoteDescription(magicPeerConnectionWrapper
-                                        .getMagicSdpObserver(), sessionDescriptionWithPreferredCodec);
-                            }
-                            break;
-                        case "candidate":
-                            NCIceCandidate ncIceCandidate = ncSignalingMessage.getPayload().getIceCandidate();
-                            IceCandidate iceCandidate = new IceCandidate(ncIceCandidate.getSdpMid(),
-                                    ncIceCandidate.getSdpMLineIndex(), ncIceCandidate.getCandidate());
-                            magicPeerConnectionWrapper.addCandidate(iceCandidate);
-                            break;
-                        case "endOfCandidates":
-                            magicPeerConnectionWrapper.drainIceCandidates();
-                            break;
-                        default:
-                            break;
+                    String type = null;
+                    if (ncSignalingMessage.getPayload() != null && ncSignalingMessage.getPayload().getType() != null) {
+                        type = ncSignalingMessage.getPayload().getType();
+                    } else if (ncSignalingMessage.getType() != null) {
+                        type = ncSignalingMessage.getType();
                     }
+
+                    if (type != null) {
+                        switch (type) {
+                            case "unshareScreen":
+                                endPeerConnection(ncSignalingMessage.getFrom(), true);
+                                break;
+                            case "offer":
+                            case "answer":
+                                magicPeerConnectionWrapper.setNick(ncSignalingMessage.getPayload().getNick());
+                                SessionDescription sessionDescriptionWithPreferredCodec;
+
+                                String sessionDescriptionStringWithPreferredCodec = MagicWebRTCUtils.preferCodec
+                                        (ncSignalingMessage.getPayload().getSdp(),
+                                                "H264", false);
+
+                                sessionDescriptionWithPreferredCodec = new SessionDescription(
+                                        SessionDescription.Type.fromCanonicalForm(type),
+                                        sessionDescriptionStringWithPreferredCodec);
+
+                                if (magicPeerConnectionWrapper.getPeerConnection() != null) {
+                                    magicPeerConnectionWrapper.getPeerConnection().setRemoteDescription(magicPeerConnectionWrapper
+                                            .getMagicSdpObserver(), sessionDescriptionWithPreferredCodec);
+                                }
+                                break;
+                            case "candidate":
+                                NCIceCandidate ncIceCandidate = ncSignalingMessage.getPayload().getIceCandidate();
+                                IceCandidate iceCandidate = new IceCandidate(ncIceCandidate.getSdpMid(),
+                                        ncIceCandidate.getSdpMLineIndex(), ncIceCandidate.getCandidate());
+                                magicPeerConnectionWrapper.addCandidate(iceCandidate);
+                                break;
+                            case "endOfCandidates":
+                                magicPeerConnectionWrapper.drainIceCandidates();
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                } else {
+                    Log.d(TAG, "Something went very very wrong");
                 }
-            } else {
-                Log.d(TAG, "Something went very very wrong");
             }
+        } catch (Exception ex) {
         }
-        }catch (Exception ex)
-        {}
     }
 
     private void hangup(boolean shutDownView) {
@@ -1488,42 +1491,42 @@ public class CallControllerSpreed extends BaseController {
     }
 
     private void hangupNetworkCalls(boolean shutDownView) {
-            ncApi.leaveCall(credentials, ApiUtils.getUrlForCall(baseUrl, roomToken))
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Observer<GenericOverall>() {
-                        @Override
-                        public void onSubscribe(Disposable d) {
+        ncApi.leaveCall(credentials, ApiUtils.getUrlForCall(baseUrl, roomToken))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<GenericOverall>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
 
+                    }
+
+                    @Override
+                    public void onNext(GenericOverall genericOverall) {
+                        if (!TextUtils.isEmpty(credentials) && hasExternalSignalingServer) {
+                            webSocketClient.joinRoomWithRoomTokenAndSession("", callSession);
                         }
 
-                        @Override
-                        public void onNext(GenericOverall genericOverall) {
-                            if (!TextUtils.isEmpty(credentials) && hasExternalSignalingServer) {
-                                webSocketClient.joinRoomWithRoomTokenAndSession("", callSession);
+                        if (isMultiSession) {
+                            if (shutDownView && getActivity() != null) {
+                                getActivity().finish();
+                            } else if (!shutDownView && (currentCallStatus.equals(CallStatus.RECONNECTING) || currentCallStatus.equals(CallStatus.PUBLISHER_FAILED))) {
+                                initiateCall();
                             }
-
-                            if (isMultiSession) {
-                                if (shutDownView && getActivity() != null) {
-                                    getActivity().finish();
-                                } else if (!shutDownView && (currentCallStatus.equals(CallStatus.RECONNECTING) || currentCallStatus.equals(CallStatus.PUBLISHER_FAILED))) {
-                                    initiateCall();
-                                }
-                            } else {
-                                leaveRoom(shutDownView);
-                            }
+                        } else {
+                            leaveRoom(shutDownView);
                         }
+                    }
 
-                        @Override
-                        public void onError(Throwable e) {
+                    @Override
+                    public void onError(Throwable e) {
 
-                        }
+                    }
 
-                        @Override
-                        public void onComplete() {
+                    @Override
+                    public void onComplete() {
 
-                        }
-                    });
+                    }
+                });
     }
 
     private void leaveRoom(boolean shutDownView) {
@@ -1618,6 +1621,8 @@ public class CallControllerSpreed extends BaseController {
         }
         ApplicationWideCurrentRoomHolder.getInstance().getParticipantsList().clear();
         ApplicationWideCurrentRoomHolder.getInstance().setParticipantsList(users);
+        ApplicationWideCurrentRoomHolder.getInstance().getNameSessionIdCombinationMap().clear();
+        eventBus.post(new UserAddRemoveEvent(true));
     }
 
     private void getPeersForCall() {
@@ -1772,6 +1777,20 @@ public class CallControllerSpreed extends BaseController {
             layoutParams.height = FrameLayout.LayoutParams.WRAP_CONTENT;
             layoutParams.width = (int) getResources().getDimension(R.dimen.large_preview_dimension);
             pipVideoView.setLayoutParams(layoutParams);
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.BACKGROUND)
+    public void onPeerIdEvent(PeerIdEvent peerIdEvent) {
+
+        HashMap<String,Object> peerData=peerIdEvent.peerId;
+        for(HashMap<String,Object> map:ApplicationWideCurrentRoomHolder.getInstance().getParticipantsList())
+        {
+            if(peerData.get(ApplicationWideConstants.SESSION_ID).toString().equals(map.get(ApplicationWideConstants.SESSION_ID)))
+            {
+                map.put(ApplicationWideConstants.PEER_ID,peerData.get(ApplicationWideConstants.PEER_ID));
+                return;
+            }
         }
     }
 
@@ -2046,6 +2065,24 @@ public class CallControllerSpreed extends BaseController {
                 imageView.setVisibility(View.VISIBLE);
             }
         }
+
+        HashMap<String, Object> selectedparticipant = ApplicationWideCurrentRoomHolder.getInstance().getParticipantForSessionID(sessionId);
+        if (!video) {
+            if (change) {
+                selectedparticipant.put(ApplicationWideConstants.AUDIO, Participant.AudioFlags.ENABLED);
+
+            } else {
+                selectedparticipant.put(ApplicationWideConstants.AUDIO, Participant.AudioFlags.DISABLED);
+            }
+        } else {
+            if (change) {
+                selectedparticipant.put(ApplicationWideConstants.VIDEO, Participant.VideoFlags.ENABLED);
+
+            } else {
+                selectedparticipant.put(ApplicationWideConstants.VIDEO, Participant.VideoFlags.DISABLED);
+            }
+        }
+
     }
 
     private void setupNewPeerLayout(String session, String type) {
@@ -2410,32 +2447,27 @@ public class CallControllerSpreed extends BaseController {
 
     private void prepareAndShowBottomSheetWithBundle(Bundle bundle, boolean showEntrySheet) {
         if (view == null) {
-            view = getActivity().getLayoutInflater().inflate(R.layout.bottom_sheet, null, false);
+            view = getActivity().getLayoutInflater().inflate(R.layout.bottom_sheet_spreed, null, false);
         }
 
         if (bottomSheet == null) {
             bottomSheet = new BottomSheet.Builder(getActivity()).setView(view).create();
-        }
 
-        if (showEntrySheet) {
-            getChildRouter((ViewGroup) view).setRoot(
-                    RouterTransaction.with(new ConversationParticipantsController(bundle))
-                            .popChangeHandler(new VerticalChangeHandler())
-                            .pushChangeHandler(new VerticalChangeHandler()));
-        } else {
-            getChildRouter((ViewGroup) view).setRoot(
-                    RouterTransaction.with(new ConversationParticipantsController(bundle))
-                            .popChangeHandler(new VerticalChangeHandler())
-                            .pushChangeHandler(new VerticalChangeHandler()));
         }
+        view.setBackgroundColor(getResources().getColor(R.color.bg_meeting_detail_light_grey));
+        getChildRouter((ViewGroup) view).setRoot(
+                RouterTransaction.with(new ConversationParticipantsController(bundle))
+                       /* .popChangeHandler(new VerticalChangeHandler())
+                        .pushChangeHandler(new VerticalChangeHandler())*/);
+
 
         bottomSheet.setOnShowListener(dialog -> {
-            if (showEntrySheet) {
+           /* if (showEntrySheet) {
                 new KeyboardUtils(getActivity(), bottomSheet.getLayout(), true);
             } else {
                 eventBus.post(new BottomSheetLockEvent(false, 0,
                         false, false));
-            }
+            }*/
         });
 
 //        bottomSheet.setOnDismissListener(dialog -> "");

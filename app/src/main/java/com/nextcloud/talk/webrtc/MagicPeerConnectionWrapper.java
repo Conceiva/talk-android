@@ -37,6 +37,8 @@ import com.nextcloud.talk.models.json.signaling.DataChannelMessage;
 import com.nextcloud.talk.models.json.signaling.DataChannelMessageNick;
 import com.nextcloud.talk.models.json.signaling.NCIceCandidate;
 import com.nextcloud.talk.utils.LoggingUtils;
+import com.nextspreed.events.PeerIdEvent;
+
 import org.greenrobot.eventbus.EventBus;
 import org.webrtc.*;
 
@@ -300,6 +302,15 @@ public class MagicPeerConnectionWrapper {
                     EventBus.getDefault().post(new PeerConnectionEvent(PeerConnectionEvent.PeerConnectionEventType
                             .VIDEO_CHANGE, sessionId, null, remoteVideoOn, videoStreamType));
                 }
+                else if ("sessionId".equals(dataChannelMessage.getType())) {
+                    if (dataChannelMessage.getPayload() != null)
+                    {
+                        HashMap<String, Object> payloadHashMap = (HashMap<String, Object>) dataChannelMessage.getPayload();
+                        EventBus.getDefault().post(new PeerIdEvent(payloadHashMap));
+                    }
+
+                }
+
             } catch (IOException e) {
                 Log.d(TAG, "Failed to parse data channel message");
             }

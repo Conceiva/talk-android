@@ -81,6 +81,8 @@ import com.nextcloud.talk.utils.preferences.preferencestorage.DatabaseStorageMod
 import com.nextcloud.talk.utils.singletons.ApplicationWideCurrentRoomHolder
 import com.nextcloud.talk.utils.singletons.ApplicationWideCurrentRoomHolder.getInstance
 import com.nextspreed.adapters.messages.items.ParticipantItem
+import com.nextspreed.events.UserAddRemoveEvent
+import com.nextspreed.utils.ApplicationWideConstants
 import com.yarolegovich.lovelydialog.LovelySaveStateHandler
 import com.yarolegovich.lovelydialog.LovelyStandardDialog
 import com.yarolegovich.mp.*
@@ -98,6 +100,7 @@ import org.greenrobot.eventbus.ThreadMode
 import org.webrtc.SurfaceViewRenderer
 import java.util.*
 import javax.inject.Inject
+import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 
@@ -145,7 +148,7 @@ class ConversationParticipantsController(args: Bundle) : BaseController(args) {
 
     private var saveStateHandler: LovelySaveStateHandler? = null
 
-    lateinit var participantList : List<Participant>;
+    var participantList: ArrayList<Participant> = ArrayList<Participant>()
 
     private val workerData: Data?
         get() {
@@ -203,8 +206,8 @@ class ConversationParticipantsController(args: Bundle) : BaseController(args) {
         }
 //        actionBar!!.setDisplayHomeAsUpEnabled(true)
         if (adapter == null) {
-//            getListOfParticipants()
-            generateParticipantsList(ApplicationWideCurrentRoomHolder.getInstance().participantsList);
+            getListOfParticipants()
+//            generateParticipantsList(ApplicationWideCurrentRoomHolder.getInstance().participantsList);
         } else {
             setupAdapter()
         }
@@ -236,9 +239,9 @@ class ConversationParticipantsController(args: Bundle) : BaseController(args) {
 
     private fun setupAdapter() {
         if (activity != null) {
-            if (adapter == null) {
+//            if (adapter == null) {
                 adapter = FlexibleAdapter(recyclerViewItems, activity, true)
-            }
+//            }
 
             val layoutManager = SmoothScrollLinearLayoutManager(activity)
             recyclerView?.layoutManager = layoutManager
@@ -262,7 +265,7 @@ class ConversationParticipantsController(args: Bundle) : BaseController(args) {
         var participant: Participant
         progressBar.visibility = View.GONE
 
-        recyclerViewItems = ArrayList()
+        recyclerViewItems.clear()
         var ownUserItem: ParticipantItem? = null
 
         for (i in participants.indices) {
@@ -273,13 +276,14 @@ class ConversationParticipantsController(args: Bundle) : BaseController(args) {
                 ownUserItem = userItem
                 userItem.model.sessionId = "-1"
                 userItem.isEnabled = true
+                participant.displayName = conversationUser.displayName;
             } else {
                 recyclerViewItems.add(userItem)
             }
         }
-        participantList=participants;
+        participantList = participants as ArrayList<Participant>;
 
-               if (ownUserItem != null) {
+        if (ownUserItem != null) {
             recyclerViewItems.add(0, ownUserItem)
         }
 
@@ -287,8 +291,9 @@ class ConversationParticipantsController(args: Bundle) : BaseController(args) {
 
         adapter!!.notifyDataSetChanged()
     }
-    private fun handleParticipantsForStatusUpdate(participantToUpdate: HashMap<String,Any>) {
-        var userItem: ParticipantItem
+
+    private fun handleParticipantsForStatusUpdate(participantToUpdate: HashMap<String, Any>) {
+        /*var userItem: ParticipantItem
         var participant: Participant
         progressBar.visibility = View.GONE
 
@@ -299,15 +304,15 @@ class ConversationParticipantsController(args: Bundle) : BaseController(args) {
             participant = participantList[i]
             userItem = ParticipantItem(participant, conversationUser, null)
             userItem.isEnabled = participant.sessionId != "0"
-            if(participantToUpdate.get("userId").toString().equals(participant.userId))
-            {
-                if(participantToUpdate["Audio"]!=null)
-                participant.audioStatus= participantToUpdate["Audio"] as Participant.AudioFlags?
-                if(participantToUpdate["Video"]!=null)
-                participant.videoStatus= participantToUpdate["Video"] as Participant.VideoFlags?
+            if (participantToUpdate.get("userId").toString().equals(participant.userId)) {
+                if (participantToUpdate["Audio"] != null)
+                    participant.audioStatus = participantToUpdate["Audio"] as Participant.AudioFlags?
+                if (participantToUpdate["Video"] != null)
+                    participant.videoStatus = participantToUpdate["Video"] as Participant.VideoFlags?
             }
             if (!TextUtils.isEmpty(participant.userId) && participant.userId == conversationUser!!.userId) {
                 ownUserItem = userItem
+                participant.displayName = conversationUser.displayName;
                 userItem.model.sessionId = "-1"
                 userItem.isEnabled = true
             } else {
@@ -318,48 +323,100 @@ class ConversationParticipantsController(args: Bundle) : BaseController(args) {
 
         if (ownUserItem != null) {
             recyclerViewItems.add(0, ownUserItem)
-        }
+        }*/
 
 //        setupAdapter()
 
-        adapter!!.notifyDataSetChanged()
-    }
-
-    private fun generateParticipantsList(participantToUpdate: List<HashMap<String,Any>>)
-    {
-
-        var userItem: ParticipantItem
         var participant: Participant
-        recyclerViewItems = ArrayList()
-        var ownUserItem: ParticipantItem? = null
-
-        for (i in participantToUpdate.indices) {
-            var participantMap:HashMap<String,Any> = participantToUpdate.get(i)
-            participant= Participant();
-            participant.type= Participant.getParticipantType(participantMap.get("participantType").toString().toInt())
-            participant.selected= false
-            participant.roomId=conversationToken.toString().toLong()
-            participant.audioStatus=Participant.AudioFlags.ENABLED
-            participant.videoStatus=Participant.VideoFlags.ENABLED
-            participant.sessionId= participantMap.get("sessionId") as String?
-            participant.lastPing= participantMap.get("lastPing") as Long
-            participant.inCall= participantMap.get("inCall") as Boolean
-
-
-            userItem = ParticipantItem(participant, conversationUser, null)
-            userItem.isEnabled = participant.sessionId != "0"
-
-            if (!TextUtils.isEmpty(participant.userId) && participant.userId == conversationUser!!.userId) {
-                ownUserItem = userItem
-                userItem.model.sessionId = "-1"
-                userItem.isEnabled = true
-            } else {
-                recyclerViewItems.add(userItem)
+        for (i in participantList.indices) {
+            var participant = participantList[i]
+            if (participant.sessionId.equals(participantToUpdate.get(ApplicationWideConstants.SESSION_ID))) {
+                var participantItem: ParticipantItem = recyclerViewItems.get(i) as ParticipantItem
+                if (participantToUpdate[ApplicationWideConstants.AUDIO] != null)
+                    participant.audioStatus = participantToUpdate[ApplicationWideConstants.AUDIO] as Participant.AudioFlags?
+                if (participantToUpdate[ApplicationWideConstants.VIDEO] != null)
+                    participant.videoStatus = participantToUpdate[ApplicationWideConstants.VIDEO] as Participant.VideoFlags?
+                break
             }
 
         }
+        adapter?.notifyDataSetChanged()
+
+    }
+
+    private fun handleParticipantsForNameUpdate(participantToUpdate: HashMap<String, Any>) {
+        var userItem: ParticipantItem
+        var participant: Participant
+        progressBar.visibility = View.GONE
+
+        var ownUserItem: ParticipantItem? = null
+
+        for (i in participantList.indices) {
+            participant = participantList[i]
+            if (participant.sessionId.equals(participantToUpdate.get(ApplicationWideConstants.SESSION_ID))) {
+                var participantItem: ParticipantItem = recyclerViewItems.get(i) as ParticipantItem
+                participantItem.getModel().displayName = participantToUpdate.get(ApplicationWideConstants.DISPLAY_NAME).toString()
+                break
+            }
+
+        }
+        adapter?.notifyDataSetChanged()
+//        setupAdapter()
+
+    }
+
+    private fun generateParticipantsList(participantToUpdate: List<HashMap<String, Any>>) {
+
+        var userItem: ParticipantItem
+        lateinit var participant: Participant;
+        recyclerViewItems = ArrayList()
+        var ownUserItem: ParticipantItem? = null
+        participantList.clear()
+        for (i in participantToUpdate.indices) {
+
+            var participantMap: HashMap<String, Any> = participantToUpdate.get(i)
+            /*if(participantMap.get(ApplicationWideConstants.IN_CALL) as Boolean)
+            {*/
+                participant = Participant();
+                participant.type = Participant.getParticipantType(participantMap.get(ApplicationWideConstants.PARTICIPANT_TYPE).toString().toInt())
+                participant.selected = false
+                participant.roomId = conversationToken.toString().toLong()
+                participant.audioStatus = Participant.AudioFlags.ENABLED
+                participant.videoStatus = Participant.VideoFlags.ENABLED
+
+                if (participantMap.containsKey(ApplicationWideConstants.AUDIO))
+                    participant.audioStatus = participantMap[ApplicationWideConstants.AUDIO] as Participant.AudioFlags?
+
+                if (participantMap.containsKey(ApplicationWideConstants.VIDEO))
+                    participant.videoStatus = participantMap[ApplicationWideConstants.VIDEO] as Participant.VideoFlags?
+
+                participant.sessionId = participantMap.get(ApplicationWideConstants.SESSION_ID) as String?
+                participant.userId = participantMap.get(ApplicationWideConstants.USER_ID) as String?
+
+                if (participantMap.containsKey(ApplicationWideConstants.DISPLAY_NAME))
+                    participant.displayName = participantMap.get(ApplicationWideConstants.DISPLAY_NAME) as String?
+
+                participant.lastPing = participantMap.get(ApplicationWideConstants.LAST_PING) as Long
+                participant.inCall = participantMap.get(ApplicationWideConstants.IN_CALL) as Boolean
+
+                userItem = ParticipantItem(participant, conversationUser, null)
+                userItem.isEnabled = participant.sessionId != "0"
+
+                if (!TextUtils.isEmpty(participant.userId) && participant.userId == conversationUser!!.userId) {
+                    ownUserItem = userItem
+                    participant.displayName = conversationUser.displayName;
+                    userItem.model.sessionId = "-1"
+                    userItem.isEnabled = true
+                } else {
+                    recyclerViewItems.add(userItem)
+                    (participantList as ArrayList<Participant>).add(participant)
+                }
+//            }
+        }
 
         if (ownUserItem != null) {
+            (participantList as ArrayList<Participant>).add(0, participant)
+
             recyclerViewItems.add(0, ownUserItem)
         }
 
@@ -420,97 +477,32 @@ class ConversationParticipantsController(args: Bundle) : BaseController(args) {
         router.setBackstack(backstack, HorizontalChangeHandler())
     }
 
-    /* private fun fetchRoomInfo() {
-         ncApi.getRoom(credentials, ApiUtils.getRoom(conversationUser!!.baseUrl, conversationToken))
-                 .subscribeOn(Schedulers.io())
-                 .observeOn(AndroidSchedulers.mainThread())
-                 .subscribe(object : Observer<RoomOverall> {
-                     override fun onSubscribe(d: Disposable) {
-                         roomDisposable = d
-                     }
-
-                     override fun onNext(roomOverall: RoomOverall) {
-                         conversation = roomOverall.ocs.data
-
-                         if (isAttached && (!isBeingDestroyed || !isDestroyed)) {
-                             ownOptionsCategory.visibility = View.VISIBLE
-
-                             setupWebinaryView()
-
-                             if (!conversation!!.canLeave(conversationUser)) {
-                                 leaveConversationAction.visibility = View.GONE
-                             } else {
-                                 leaveConversationAction.visibility = View.VISIBLE
-                             }
-
-                             if (!conversation!!.canModerate(conversationUser)) {
-                                 deleteConversationAction.visibility = View.GONE
-                             } else {
-                                 deleteConversationAction.visibility = View.VISIBLE
-                             }
-
-                             if (Conversation.ConversationType.ROOM_SYSTEM == conversation!!.type) {
-                                 muteCalls.visibility = View.GONE
-                             }
-
-                             getListOfParticipants()
-
-                             progressBar.visibility = View.GONE
-
-                             nameCategoryView.visibility = View.VISIBLE
-
-                             conversationDisplayName.text = conversation!!.displayName
-
-
-                             loadConversationAvatar()
-                             adjustNotificationLevelUI()
-
-                             notificationsPreferenceScreen.visibility = View.VISIBLE
-                         }
-                     }
-
-                     override fun onError(e: Throwable) {
-
-                     }
-
-                     override fun onComplete() {
-                         roomDisposable!!.dispose()
-                     }
-                 })
-     }*/
-    /*@Subscribe(threadMode = ThreadMode.BACKGROUND)
-    fun onMessageEvent(webSocketCommunicationEvent: WebSocketCommunicationEvent) {
-        when (webSocketCommunicationEvent.type) {
-
-            "participantsUpdate" -> if (webSocketCommunicationEvent.hashMap?.get("roomToken").equals(roomToken)) {
-                processUsersInRoom(webSocketClient.getJobWithId(Integer.valueOf(webSocketCommunicationEvent.getHashMap().get("jobId"))) as List<HashMap<String, Any>>)
-            }
-            "signalingMessage" -> processMessage(webSocketClient.getJobWithId(Integer.valueOf(webSocketCommunicationEvent.getHashMap().get("jobId"))) as NCSignalingMessage)
-            "peerReadyForRequestingOffer" -> webSocketClient.requestOfferForSessionIdWithType(webSocketCommunicationEvent.getHashMap().get("sessionId"), "video")
-        }
+    //    UserAddRemoveEvent
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onUserUpdate (userUpdate: UserAddRemoveEvent)
+    {
+        generateParticipantsList(ApplicationWideCurrentRoomHolder.getInstance().participantsList)
     }
 
-   */
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onMessageEvent(peerConnectionEvent: PeerConnectionEvent) {
         if (peerConnectionEvent.peerConnectionEventType.equals(PeerConnectionEvent.PeerConnectionEventType
                         .PEER_CLOSED)) {
-        } 
-        else if (peerConnectionEvent.peerConnectionEventType.equals(PeerConnectionEvent
-                        .PeerConnectionEventType.NICK_CHANGE)) {
-//            gotNick(peerConnectionEvent.sessionId, peerConnectionEvent.nick, true, peerConnectionEvent.videoStreamType)
         } else if (peerConnectionEvent.peerConnectionEventType.equals(PeerConnectionEvent
-                        .PeerConnectionEventType.VIDEO_CHANGE) ) {
-           /* gotAudioOrVideoChange(true, peerConnectionEvent.sessionId + "+" + peerConnectionEvent.videoStreamType,
-                    peerConnectionEvent.changeValue)*/
-            gotAudioOrVideoChange(true, peerConnectionEvent.sessionId ,
+                        .PeerConnectionEventType.NICK_CHANGE)) {
+            gotNick(peerConnectionEvent.sessionId, peerConnectionEvent.nick, true, peerConnectionEvent.videoStreamType)
+        } else if (peerConnectionEvent.peerConnectionEventType.equals(PeerConnectionEvent
+                        .PeerConnectionEventType.VIDEO_CHANGE)) {
+            /* gotAudioOrVideoChange(true, peerConnectionEvent.sessionId + "+" + peerConnectionEvent.videoStreamType,
+                     peerConnectionEvent.changeValue)*/
+            gotAudioOrVideoChange(true, peerConnectionEvent.sessionId,
                     peerConnectionEvent.changeValue)
         } else if (peerConnectionEvent.peerConnectionEventType.equals(PeerConnectionEvent
                         .PeerConnectionEventType.AUDIO_CHANGE)) {
             /*gotAudioOrVideoChange(false, peerConnectionEvent.sessionId + "+" + peerConnectionEvent.videoStreamType,
                     peerConnectionEvent.changeValue)
 */
-            gotAudioOrVideoChange(false, peerConnectionEvent.sessionId ,
+            gotAudioOrVideoChange(false, peerConnectionEvent.sessionId,
                     peerConnectionEvent.changeValue)
         }
 
@@ -518,24 +510,39 @@ class ConversationParticipantsController(args: Bundle) : BaseController(args) {
 
     private fun gotAudioOrVideoChange(video: Boolean, sessionId: String, change: Boolean) {
         var selectedparticipant: java.util.HashMap<String, Any>? = ApplicationWideCurrentRoomHolder.getInstance().getParticipantForSessionID(sessionId);
-            if (!video) {
-                if (change)
-                {
-                    selectedparticipant!!.put("Audio",Participant.AudioFlags.ENABLED)
+        if (!video) {
+            if (change) {
+                selectedparticipant!!.put(ApplicationWideConstants.AUDIO, Participant.AudioFlags.ENABLED)
 
-                } else {
-                    selectedparticipant!!.put("Audio",Participant.AudioFlags.DISABLED)
-                }
             } else {
-                if (change)
-                {
-                    selectedparticipant!!.put("Video",Participant.VideoFlags.ENABLED)
-
-                } else {
-                    selectedparticipant!!.put("Video",Participant.VideoFlags.DISABLED)
-                }
+                selectedparticipant!!.put(ApplicationWideConstants.AUDIO, Participant.AudioFlags.DISABLED)
             }
+        } else {
+            if (change) {
+                selectedparticipant!!.put(ApplicationWideConstants.VIDEO, Participant.VideoFlags.ENABLED)
+
+            } else {
+                selectedparticipant!!.put(ApplicationWideConstants.VIDEO, Participant.VideoFlags.DISABLED)
+            }
+        }
         handleParticipantsForStatusUpdate(selectedparticipant);
+    }
+
+    private fun gotNick(sessionOrUserId: String, nick: String, isFromAnEvent: Boolean, type: String) {
+
+        if (!(ApplicationWideCurrentRoomHolder.getInstance().nameSessionIdCombinationMap.containsKey(ApplicationWideConstants.DISPLAY_NAME))) {
+            ApplicationWideCurrentRoomHolder.getInstance().nameSessionIdCombinationMap.put(ApplicationWideConstants.DISPLAY_NAME, nick);
+            for (i in ApplicationWideCurrentRoomHolder.getInstance().participantsList.indices) {
+                var map = ApplicationWideCurrentRoomHolder.getInstance().participantsList[i]
+                map.put(ApplicationWideConstants.DISPLAY_NAME, nick)
+                if (map.get(ApplicationWideConstants.SESSION_ID).toString().equals(sessionOrUserId) || map.get(ApplicationWideConstants.USER_ID).toString().equals(sessionOrUserId)) {
+
+                    handleParticipantsForNameUpdate(map)
+                    return
+                }
+
+            }
+        }
     }
 
     private fun processUsersInRoom(users: List<HashMap<String, Any>>) {
@@ -545,19 +552,19 @@ class ConversationParticipantsController(args: Bundle) : BaseController(args) {
         for (participant in users) {
             /*if (participant["sessionId"] != callSession)
             {*/
-                val inCallObject = participant["inCall"]
-                val isNewSession: Boolean
-                if (inCallObject is Boolean) {
-                    isNewSession = inCallObject
-                } else {
-                    isNewSession = inCallObject as Long != 0L
-                }
+            val inCallObject = participant["inCall"]
+            val isNewSession: Boolean
+            if (inCallObject is Boolean) {
+                isNewSession = inCallObject
+            } else {
+                isNewSession = inCallObject as Long != 0L
+            }
 
-                if (isNewSession) {
-                    newSessions.add(participant["sessionId"]!!.toString())
-                } else {
-                    oldSesssions.add(participant["sessionId"]!!.toString())
-                }
+            if (isNewSession) {
+                newSessions.add(participant["sessionId"]!!.toString())
+            } else {
+                oldSesssions.add(participant["sessionId"]!!.toString())
+            }
 
             //}
         }

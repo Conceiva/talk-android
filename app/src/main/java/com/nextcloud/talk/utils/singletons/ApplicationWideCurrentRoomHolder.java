@@ -22,6 +22,7 @@ package com.nextcloud.talk.utils.singletons;
 
 import com.nextcloud.talk.models.database.UserEntity;
 import com.nextcloud.talk.models.json.participants.Participant;
+import com.nextspreed.utils.ApplicationWideConstants;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -44,6 +45,16 @@ public class ApplicationWideCurrentRoomHolder {
     }
 
     List<HashMap<String, Object>> participantsList=new ArrayList<>();
+
+    public HashMap<String, String> getNameSessionIdCombinationMap() {
+        return nameSessionIdCombinationMap;
+    }
+
+    public void setNameSessionIdCombinationMap(HashMap<String, String> nameSessionIdCombinationMap) {
+        this.nameSessionIdCombinationMap = nameSessionIdCombinationMap;
+    }
+
+    HashMap<String, String> nameSessionIdCombinationMap=new HashMap<>();
 //    private <L userInRoom = new UserEntity();
     private boolean inCall = false;
     private String session = "";
@@ -105,7 +116,7 @@ public class ApplicationWideCurrentRoomHolder {
         HashMap<String,Object> selectedparticipant=null;
         for(HashMap<String,Object> participant:  participantsList )
         {
-            if(participant.get("sessionId").toString().equalsIgnoreCase(sessionId))
+            if(sessionId.contains(participant.get(ApplicationWideConstants.SESSION_ID).toString()))
             selectedparticipant=participant;
         }
         return selectedparticipant;

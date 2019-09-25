@@ -31,6 +31,7 @@ public class PeerConnectionEvent {
     public final Boolean changeValue;
     public final String videoStreamType;
 
+
     public PeerConnectionEvent(PeerConnectionEventType peerConnectionEventType, @Nullable String sessionId,
                                @Nullable String nick, Boolean changeValue, @Nullable String videoStreamType) {
         this.peerConnectionEventType = peerConnectionEventType;
@@ -41,6 +42,6 @@ public class PeerConnectionEvent {
     }
 
     public enum PeerConnectionEventType {
-        PEER_CONNECTED, PEER_CLOSED, SENSOR_FAR, SENSOR_NEAR, NICK_CHANGE, AUDIO_CHANGE, VIDEO_CHANGE, PUBLISHER_FAILED
+        PEER_CONNECTED, PEER_CLOSED, SENSOR_FAR, SENSOR_NEAR, NICK_CHANGE, AUDIO_CHANGE, VIDEO_CHANGE, PUBLISHER_FAILED,SESSION_ID
     }
 }

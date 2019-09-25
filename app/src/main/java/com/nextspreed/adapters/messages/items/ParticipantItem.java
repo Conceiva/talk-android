@@ -25,6 +25,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 import androidx.emoji.widget.EmojiTextView;
 
@@ -98,7 +99,7 @@ public class ParticipantItem extends AbstractFlexibleItem<ParticipantItem.UserIt
     @Override
     public int getLayoutRes() {
 
-            return R.layout.rv_spreed_item_conversation_info_participant;
+        return R.layout.rv_spreed_item_conversation_info_participant;
     }
 
     @Override
@@ -111,185 +112,143 @@ public class ParticipantItem extends AbstractFlexibleItem<ParticipantItem.UserIt
 
         holder.simpleDraweeView.setController(null);
 
-        if (holder.checkedImageView != null) {
-            if (participant.selected) {
-                holder.checkedImageView.setVisibility(View.VISIBLE);
-            } else {
-                holder.checkedImageView.setVisibility(View.GONE);
-            }
-        }
-
-        if (adapter.hasFilter()) {
-            FlexibleUtils.highlightText(holder.contactDisplayName, participant.displayName,
-                    String.valueOf(adapter.getFilter(String.class)), NextcloudTalkApplication.Companion.getSharedApplication()
-                            .getResources().getColor(R.color.colorPrimary));
-        }
-
-        holder.contactDisplayName.setText(participant.displayName);
-
-        if (TextUtils.isEmpty(participant.displayName) &&
-                (participant.type.equals(Participant.ParticipantType.GUEST) || participant.type.equals(Participant.ParticipantType.USER_FOLLOWING_LINK))) {
-            holder.contactDisplayName.setText(NextcloudTalkApplication.Companion.getSharedApplication().getString(R.string.nc_guest));
-        }
-
-        if (TextUtils.isEmpty(participant.source) || participant.source.equals("users")) {
-            if (Participant.ParticipantType.GUEST.equals(participant.type) ||
-                    Participant.ParticipantType.USER_FOLLOWING_LINK.equals(participant.type)) {
-                String displayName = NextcloudTalkApplication.Companion.getSharedApplication()
-                        .getResources().getString(R.string.nc_guest);
-
-                if (!TextUtils.isEmpty(participant.displayName)) {
-                    displayName = participant.displayName;
+        if (participant.displayName != null && !TextUtils.isEmpty(participant.displayName)) {
+            holder.participantParentLayout.setVisibility(View.VISIBLE);
+            if (holder.checkedImageView != null) {
+                if (participant.selected) {
+                    holder.checkedImageView.setVisibility(View.VISIBLE);
+                } else {
+                    holder.checkedImageView.setVisibility(View.GONE);
                 }
+            }
 
-                DraweeController draweeController = Fresco.newDraweeControllerBuilder()
-                        .setOldController(holder.simpleDraweeView.getController())
-                        .setAutoPlayAnimations(true)
-                        .setImageRequest(DisplayUtils.getImageRequestForUrl(ApiUtils.getUrlForAvatarWithNameForGuests(userEntity.getBaseUrl(),
-                                displayName, R.dimen.avatar_size), null))
-                        .build();
-                holder.simpleDraweeView.setController(draweeController);
+            if (adapter.hasFilter()) {
+                FlexibleUtils.highlightText(holder.contactDisplayName, participant.displayName,
+                        String.valueOf(adapter.getFilter(String.class)), NextcloudTalkApplication.Companion.getSharedApplication()
+                                .getResources().getColor(R.color.colorPrimary));
+            }
 
+            holder.contactDisplayName.setText(participant.displayName);
+
+            if (TextUtils.isEmpty(participant.displayName) &&
+                    (participant.type.equals(Participant.ParticipantType.GUEST) || participant.type.equals(Participant.ParticipantType.USER_FOLLOWING_LINK))) {
+                holder.contactDisplayName.setText(NextcloudTalkApplication.Companion.getSharedApplication().getString(R.string.nc_guest));
+            }
+
+            if (TextUtils.isEmpty(participant.source) || participant.source.equals("users")) {
+
+                if (Participant.ParticipantType.USER_FOLLOWING_LINK.equals(participant.type)) {
+                    String displayName = NextcloudTalkApplication.Companion.getSharedApplication()
+                            .getResources().getString(R.string.nc_guest);
+
+                    if (!TextUtils.isEmpty(participant.displayName)) {
+                        displayName = participant.displayName;
+                    }
+
+                    DraweeController draweeController = Fresco.newDraweeControllerBuilder()
+                            .setOldController(holder.simpleDraweeView.getController())
+                            .setAutoPlayAnimations(true)
+                            .setImageRequest(DisplayUtils.getImageRequestForUrl(ApiUtils.getUrlForAvatarWithNameForGuests(userEntity.getBaseUrl(),
+                                    displayName, R.dimen.avatar_size), null))
+                            .build();
+                    holder.simpleDraweeView.setController(draweeController);
+
+                } else {
+
+                    DraweeController draweeController = Fresco.newDraweeControllerBuilder()
+                            .setOldController(holder.simpleDraweeView.getController())
+                            .setAutoPlayAnimations(true)
+                            .setImageRequest(DisplayUtils.getImageRequestForUrl(ApiUtils.getUrlForAvatarWithName(userEntity.getBaseUrl(),
+                                    participant.userId, R.dimen.avatar_size), null))
+                            .build();
+                    holder.simpleDraweeView.setController(draweeController);
+
+                }
+            } else if ("groups".equals(participant.source)) {
+                holder.simpleDraweeView.getHierarchy().setImage(new BitmapDrawable(DisplayUtils.getRoundedBitmapFromVectorDrawableResource(NextcloudTalkApplication.Companion.getSharedApplication().getResources(), R.drawable.ic_people_group_white_24px)), 100, true);
+            }
+
+            if (!isEnabled()) {
+                holder.itemView.setAlpha(0.38f);
             } else {
-
-                DraweeController draweeController = Fresco.newDraweeControllerBuilder()
-                        .setOldController(holder.simpleDraweeView.getController())
-                        .setAutoPlayAnimations(true)
-                        .setImageRequest(DisplayUtils.getImageRequestForUrl(ApiUtils.getUrlForAvatarWithName(userEntity.getBaseUrl(),
-                                participant.userId, R.dimen.avatar_size), null))
-                        .build();
-                holder.simpleDraweeView.setController(draweeController);
-
-            }
-        } else if ("groups".equals(participant.source)) {
-            holder.simpleDraweeView.getHierarchy().setImage(new BitmapDrawable(DisplayUtils.getRoundedBitmapFromVectorDrawableResource(NextcloudTalkApplication.Companion.getSharedApplication().getResources(), R.drawable.ic_people_group_white_24px)), 100, true);
-        }
-
-        if (!isEnabled()) {
-            holder.itemView.setAlpha(0.38f);
-        } else {
-            holder.itemView.setAlpha(1.0f);
-        }
-
-        Resources resources = NextcloudTalkApplication.Companion.getSharedApplication().getResources();
-
-        if (header == null) {
-            Participant.AudioFlags audioFlags = participant.audioStatus;
-            Participant.VideoFlags  videoFlag = participant.videoStatus;
-            /*switch (participantFlags) {
-                case NOT_IN_CALL:
-                    holder.voiceOrSimpleCallImageView.setImageResource(R.drawable.ic_mic_white_24px);
-                    holder.videoCallImageView.setImageResource(R.drawable.ic_videocam_white_24px);
-                    break;
-                case IN_CALL:
-                    *//*
-                    holder.voiceOrSimpleCallImageView.setBackground(resources.getDrawable(R.drawable.shape_call_bubble));
-                    holder.voiceOrSimpleCallImageView.setVisibility(View.VISIBLE);
-                    holder.videoCallImageView.setVisibility(View.GONE);
-*//*
-                    holder.voiceOrSimpleCallImageView.setImageResource(R.drawable.ic_mic_white_24px);
-                    holder.videoCallImageView.setImageResource(R.drawable.ic_videocam_video);
-
-                    break;
-                case IN_CALL_WITH_AUDIO:
-*//*
-                    holder.voiceOrSimpleCallImageView.setBackground(resources.getDrawable(R.drawable.shape_voice_bubble));
-                    holder.voiceOrSimpleCallImageView.setVisibility(View.VISIBLE);
-                    holder.videoCallImageView.setVisibility(View.GONE);
-*//*
-
-                    holder.voiceOrSimpleCallImageView.setImageResource(R.drawable.ic_mic_talking);
-                    holder.videoCallImageView.setImageResource(R.drawable.ic_videocam_white_24px);
-
-                    break;
-                case IN_CALL_WITH_VIDEO:
-                    *//*holder.voiceOrSimpleCallImageView.setBackground(resources.getDrawable(R.drawable.shape_call_bubble));
-                    holder.videoCallImageView.setBackground(resources.getDrawable(R.drawable.shape_video_bubble));
-                    holder.voiceOrSimpleCallImageView.setVisibility(View.VISIBLE);
-                    holder.videoCallImageView.setVisibility(View.VISIBLE);
-*//*
-
-                    holder.voiceOrSimpleCallImageView.setImageResource(R.drawable.ic_mic_white_24px);
-                    holder.videoCallImageView.setImageResource(R.drawable.ic_videocam_video);
-
-
-                    break;
-                case IN_CALL_WITH_AUDIO_AND_VIDEO:
-                    *//*holder.voiceOrSimpleCallImageView.setBackground(resources.getDrawable(R.drawable.shape_voice_bubble));
-                    holder.videoCallImageView.setBackground(resources.getDrawable(R.drawable.shape_video_bubble));
-                    holder.voiceOrSimpleCallImageView.setVisibility(View.VISIBLE);
-                    holder.videoCallImageView.setVisibility(View.VISIBLE);
-*//*
-                    holder.voiceOrSimpleCallImageView.setImageResource(R.drawable.ic_mic_white_24px);
-                    holder.videoCallImageView.setImageResource(R.drawable.ic_videocam_video);
-                    break;
-                default:
-                    holder.voiceOrSimpleCallImageView.setVisibility(View.GONE);
-                    holder.videoCallImageView.setVisibility(View.GONE);
-                    break;
-            }*/
-
-            switch (audioFlags) {
-                case DISABLED:
-                    holder.voiceOrSimpleCallImageView.setImageResource(R.drawable.ic_mic_off_white_24px);
-                    break;
-                case ENABLED:
-                    holder.voiceOrSimpleCallImageView.setImageResource(R.drawable.ic_mic_white_24px);
-                    break;
-                case SPEAKING:
-                    holder.voiceOrSimpleCallImageView.setImageResource(R.drawable.ic_mic_talking);
-                    break;
-                default:
-                    holder.voiceOrSimpleCallImageView.setImageResource(R.drawable.ic_mic_grey_600_24dp);
-                    break;
+                holder.itemView.setAlpha(1.0f);
             }
 
-            switch (videoFlag) {
-                case DISABLED:
-                    holder.videoCallImageView.setImageResource(R.drawable.ic_videocam_off_white_24px);
+            Resources resources = NextcloudTalkApplication.Companion.getSharedApplication().getResources();
 
-                    break;
-                case ENABLED:
+            if (header == null && ((Boolean)participant.inCall))
+            {
+                holder.buttonRelativeLayout.setVisibility(View.VISIBLE);
+                Participant.AudioFlags audioFlags = participant.audioStatus;
+                Participant.VideoFlags videoFlag = participant.videoStatus;
 
-                    holder.videoCallImageView.setImageResource(R.drawable.ic_videocam_white_24px);
-
-                    break;
-                case SPEAKING:
-                    holder.videoCallImageView.setImageResource(R.drawable.ic_videocam_video);
-                    break;
-                default:
-                    holder.videoCallImageView.setImageResource(R.drawable.ic_videocam_grey_600_24dp);
-                    break;
-            }
-
-            if (holder.contactMentionId != null) {
-                String userType = "";
-
-                switch (new EnumParticipantTypeConverter().convertToInt(participant.getType())) {
-                    case 1:
-                        //userType = NextcloudTalkApplication.Companion.getSharedApplication().getString(R.string.nc_owner);
-                        //break;
-                    case 2:
-                        userType = NextcloudTalkApplication.Companion.getSharedApplication().getString(R.string.nc_moderator);
+                switch (audioFlags) {
+                    case DISABLED:
+                        holder.voiceOrSimpleCallImageView.setImageResource(R.drawable.ic_mic_off_white_24px);
                         break;
-                    case 3:
-                        userType = NextcloudTalkApplication.Companion.getSharedApplication().getString(R.string.nc_user);
+                    case ENABLED:
+                        holder.voiceOrSimpleCallImageView.setImageResource(R.drawable.ic_mic_white_24px);
                         break;
-                    case 4:
-                        userType = NextcloudTalkApplication.Companion.getSharedApplication().getString(R.string.nc_guest);
-                        break;
-                    case 5:
-                        userType = NextcloudTalkApplication.Companion.getSharedApplication().getString(R.string.nc_following_link);
+                    case SPEAKING:
+                        holder.voiceOrSimpleCallImageView.setImageResource(R.drawable.ic_mic_talking);
                         break;
                     default:
+                        holder.voiceOrSimpleCallImageView.setImageResource(R.drawable.ic_mic_grey_600_24dp);
                         break;
                 }
 
-                if (!holder.contactMentionId.getText().equals(userType)) {
-                    holder.contactMentionId.setText(userType);
-                    holder.contactMentionId.setTextColor(NextcloudTalkApplication.Companion.getSharedApplication().getResources().getColor(R.color.colorPrimary));
+                switch (videoFlag) {
+                    case DISABLED:
+                        holder.videoCallImageView.setImageResource(R.drawable.ic_videocam_off_white_24px);
+
+                        break;
+                    case ENABLED:
+
+                        holder.videoCallImageView.setImageResource(R.drawable.ic_videocam_white_24px);
+
+                        break;
+                    case SPEAKING:
+                        holder.videoCallImageView.setImageResource(R.drawable.ic_videocam_video);
+                        break;
+                    default:
+                        holder.videoCallImageView.setImageResource(R.drawable.ic_videocam_grey_600_24dp);
+                        break;
+                }
+
+                if (holder.contactMentionId != null) {
+                    String userType = "";
+
+                    switch (new EnumParticipantTypeConverter().convertToInt(participant.getType())) {
+                        case 1:
+                            //userType = NextcloudTalkApplication.Companion.getSharedApplication().getString(R.string.nc_owner);
+                            //break;
+                        case 2:
+                            userType = NextcloudTalkApplication.Companion.getSharedApplication().getString(R.string.nc_moderator);
+                            break;
+                        case 3:
+                            userType = NextcloudTalkApplication.Companion.getSharedApplication().getString(R.string.nc_user);
+                            break;
+                        case 4:
+                            userType = NextcloudTalkApplication.Companion.getSharedApplication().getString(R.string.nc_guest);
+                            break;
+                        case 5:
+                            userType = NextcloudTalkApplication.Companion.getSharedApplication().getString(R.string.nc_following_link);
+                            break;
+                        default:
+                            break;
+                    }
+
+                    if (!holder.contactMentionId.getText().equals(userType)) {
+                        holder.contactMentionId.setText(userType);
+                        holder.contactMentionId.setTextColor(NextcloudTalkApplication.Companion.getSharedApplication().getResources().getColor(R.color.colorPrimary));
+                    }
                 }
             }
+            else {
+                holder.buttonRelativeLayout.setVisibility(View.GONE);
+            }
+        } else {
+            holder.participantParentLayout.setVisibility(View.GONE);
         }
     }
 
@@ -315,6 +274,11 @@ public class ParticipantItem extends AbstractFlexibleItem<ParticipantItem.UserIt
 
         @BindView(R.id.name_text)
         public EmojiTextView contactDisplayName;
+        @BindView(R.id.buttonRelativeLayout)
+        public RelativeLayout buttonRelativeLayout;
+
+        @BindView(R.id.participanrParentLayout)
+        public RelativeLayout participantParentLayout;
         @BindView(R.id.simple_drawee_view)
         public SimpleDraweeView simpleDraweeView;
         @Nullable
